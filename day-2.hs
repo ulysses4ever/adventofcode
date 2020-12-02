@@ -39,15 +39,11 @@ recValid R{..} = f <= n && n <= t
   n = length $ filter (== c) s
 
 recValid2 :: Rec -> Bool
-recValid2 R{..} = (fc == c) `xor` (tc == c)
+recValid2 R{..} = (fc == c) /= (tc == c)
   where
   fc = s !! (f - 1)
   tc = s !! (t - 1)
   
-xor :: Bool -> Bool -> Bool
-xor True a  = not a
-xor False a = a
-
 main ::  IO ()
 main = do
   cts <- readFile "day-2-input.txt"
