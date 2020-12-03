@@ -43,7 +43,6 @@ main ::  IO ()
 main = do
   cts <- readFile "day-3-input.txt"
   let score = length . filter (== '#')
-      loop f s = maybe [] (loop f) (f s)
       path sl = unfoldr (takeStep sl) . startState $ lines cts
 
       res1 = score . path $ slopes !! 1
