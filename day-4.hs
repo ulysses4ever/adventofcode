@@ -65,57 +65,58 @@ recValid1 R{..} =
   fsu = nubOrd fs
   n = length fsu
 
+-- Empty list if first-part check doesn't hold
 recValid :: Rec -> [Validation]
 recValid r@R{..} = 
-  if recValid1 r
-    then map fieldValid (sortOn fst fs)
-    else []
+  bool
+    []
+    (map fieldValid (sortOn fst fs))
+    (recValid1 r)
 
 fieldValid :: Field -> Validation
-fieldValid f = case fst f of
+fieldValid (n, v) = check $ case n of
 
-  "byr" -> check f $ checkYear 1920 2002
+  "byr" -> checkYear 1920 2002
 
-  "iyr" -> check f $ checkYear 2010 2020
+  "iyr" -> checkYear 2010 2020
 
-  "eyr" -> check f $ checkYear 2020 2030
+  "eyr" -> checkYear 2020 2030
 
-  "hgt" -> check f $ \v ->
-    let (reverse -> units, reverse -> val) = splitAt 2 $ reverse v
+  "hgt" ->
+    let (reverse -> units, reverse -> ht) = splitAt 2 $ reverse v
     in case units of
+      "cm" -> checkHeight 150 193 ht
 
-      "cm" ->
-        maybe False (\h -> 150 <= h && h <= 193) (readMaybe @Int val)
-      
-      "in" ->
-        maybe False (\h -> 59 <= h && h <= 76)   (readMaybe @Int val)
+      "in" -> checkHeight 59 76 ht
 
       _    -> False
 
-  "hcl" -> check f $ \v ->
-    isJust $ parseMaybe @() (char '#' >> count 6 (digitChar <|> oneOf "abcdef")) v
+  "hcl" -> isJust $
+    parseMaybe @() (char '#' >> count 6 (digitChar <|> oneOf "abcdef")) v
 
-  "ecl" -> check f $ \v ->
-    v `elem` ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
-    
-  "pid" -> check f $ \v ->
-    length v == 9 && all isDigit v
-  
-  "cid" -> ok
-  
-  _     -> invalid ("[unknown]" ++ fst f) (snd f)
+  "ecl" -> (v `elem` ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"])
+
+  "pid" -> length v == 9 && all isDigit v
+
+  "cid" -> True
+
+  _     -> False
 
   where
   ok = Right ()
 
-  invalid n v = Left $ n ++ ":" ++ v
+  invalid = Left $ n ++ ":" ++ v
 
-  check (n,v) p = bool (invalid n v) ok (p v)
+  check = bool invalid ok
 
-  checkYear :: Int -> Int -> Str -> Bool
-  checkYear from to ystr =
-    length ystr == 4 && 
-      maybe False (\y -> from <= y && y <= to) (readMaybe @Int ystr)
+  checkYear :: Int -> Int -> Bool
+  checkYear from to =
+    length v == 4 && 
+      maybe False (\y -> from <= y && y <= to) (readMaybe @Int v)
+
+  checkHeight :: Int -> Int -> Str -> Bool
+  checkHeight from to =
+    maybe False (\h -> from <= h && h <= to) . readMaybe @Int
 
 main :: IO ()
 main = do
