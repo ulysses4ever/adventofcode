@@ -46,7 +46,7 @@ recValid2 R{..} = (fc == c) /= (tc == c)
   
 main ::  IO ()
 main = do
-  cts <- readFile "day-2-input.txt"
+  cts <- readFile "input/day-2.txt"
   let res = length $ filter (recValid2 . lineToRec) (lines cts)
   print res
 

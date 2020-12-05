@@ -41,7 +41,7 @@ slopes = [(1,1), (3,1), (5,1), (7,1), (1,2)]
 
 main ::  IO ()
 main = do
-  cts <- readFile "day-3-input.txt"
+  cts <- readFile "input/day-3.txt"
   let score = length . filter (== '#')
       path sl = unfoldr (takeStep sl) . startState $ lines cts
 
