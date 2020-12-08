@@ -1,6 +1,6 @@
 #!/usr/bin/env cabal
 {- cabal:
-build-depends: base, extra, containres
+build-depends: base, extra, containers
 -}
 {-# OPTIONS_GHC -Wall -O1 #-}
 module Main where
