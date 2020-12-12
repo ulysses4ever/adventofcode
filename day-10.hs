@@ -53,10 +53,9 @@ main :: IO ()
 main = do
   inp <- getInput
   let ds = diffs inp
-      res1 = onesTimesThrees ds
+      --res1 = onesTimesThrees ds
       res2 = countSeqs ds
-  print ds
-  print res1
+  --print res1
   print res2
 
 ------------------------------------------
