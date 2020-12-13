@@ -1,11 +1,13 @@
 #!/usr/bin/env cabal
 {- cabal:
-build-depends: base, vector, primitive
+build-depends: base, vector, primitive, extra, ansi-terminal
 -}
 {-# language TupleSections, BlockArguments, MultiWayIf, ImplicitParams #-}
 {-# OPTIONS_GHC -Wall -O1 #-}
 module Main where
 
+import System.Console.ANSI
+import System.Time.Extra
 import Data.Bool
 import Data.Functor ((<&>))
 import Control.Monad hiding (void)
@@ -56,12 +58,21 @@ void = '.'
 
 -------------------- Part 1
 
+animate :: Bool
+animate = True
+
 loop ::
   (?rw :: Int, ?cl :: Int) =>
   C -> C -> IO ()
 loop ci co = do
+  when animate do
+    clearScreen
+    p ci
+    sleep 1
   changed <- iter ci co
-  if changed then loop co ci else pure ()
+  if changed
+    then loop co ci
+    else pure ()
 
 iter ::
   (?rw :: Int, ?cl :: Int) =>
