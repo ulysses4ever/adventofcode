@@ -32,9 +32,9 @@ recParser = do
   chunk ": "
   s <- takeRest
   pure $ R f t c s
-  
+
 recValid :: Rec -> Bool
-recValid R{..} = f <= n && n <= t 
+recValid R{..} = f <= n && n <= t
   where
   n = length $ filter (== c) s
 
@@ -43,10 +43,12 @@ recValid2 R{..} = (fc == c) /= (tc == c)
   where
   fc = s !! (f - 1)
   tc = s !! (t - 1)
-  
+
 main ::  IO ()
 main = do
   cts <- readFile "input/day-2.txt"
-  let res = length $ filter (recValid2 . lineToRec) (lines cts)
-  print res
-
+  let recs = map lineToRec $ lines cts
+      res1 = length $ filter recValid recs
+      res2 = length $ filter recValid2 recs
+  print res1
+  print res2

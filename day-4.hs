@@ -40,9 +40,9 @@ inpParser :: Parser [Rec]
 inpParser = recParser `sepBy` (string recSep)
 
 recParser :: Parser Rec
-recParser = 
-  R <$> 
-    fieldParser `sepBy` 
+recParser =
+  R <$>
+    fieldParser `sepBy`
     (try $ oneOf fieldSep >> (lookAhead $ noneOf "\n"))
     -- ^ this is ugly lookahead b/c `recSep` looks like a `fieldSep` at start
 
@@ -58,8 +58,8 @@ fieldParser = do
 type Validation = Either String ()
 
 recValid1 :: Rec -> Bool
-recValid1 R{..} = 
-  (n == 8 || 
+recValid1 R{..} =
+  (n == 8 ||
     (n == 7 && not ("cid" `elem` (map fst fsu))))
   where
   fsu = nubOrd fs
@@ -67,7 +67,7 @@ recValid1 R{..} =
 
 -- Empty list if first-part check doesn't hold
 recValid :: Rec -> [Validation]
-recValid r@R{..} = 
+recValid r@R{..} =
   bool
     []
     (map fieldValid (sortOn fst fs))
@@ -111,7 +111,7 @@ fieldValid (n, v) = check $ case n of
 
   checkYear :: Int -> Int -> Bool
   checkYear from to =
-    length v == 4 && 
+    length v == 4 &&
       maybe False (\y -> from <= y && y <= to) (readMaybe @Int v)
 
   checkHeight :: Int -> Int -> Str -> Bool
@@ -124,6 +124,8 @@ main = do
   let recs = inpToRecs inp
       recsSort = map (\r -> r {fs = sortOn fst $ fs r}) recs -- to ease debugging
       vs = map recValid recsSort
-      res = length . filter (all isRight) . filter (not . null)  $ vs
-  print res
+      res1 = length $ filter recValid1 recs
+      res2 = length . filter (all isRight) . filter (not . null)  $ vs
+  print res1
+  print res2
 
