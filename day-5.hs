@@ -22,7 +22,7 @@ data Rec = R {
 fromStr :: Str -> Rec
 fromStr sr = case splitAt 7 sr of
   (r,s) -> R (read' r) (read' s)
-  where 
+  where
   read' = readBin . map toBin
 
 toBin :: Char -> Char
@@ -45,7 +45,8 @@ main = do
   let recs = map fromStr $ lines  inp
       ids = map toId recs
       sids = sort ids
-      -- res1 = maximum ids
+      res1 = maximum ids
       res2 = 1 + (snd . head . dropWhile (\(c, p) -> c == p+1) $ (zip (tail sids) sids))
+  print res1
   print res2
 
