@@ -2,15 +2,14 @@
 {- cabal:
 build-depends: base, unordered-containers
 -}
-{-# language OverloadedLists #-}
-{-# OPTIONS_GHC -Wall -O1 #-}
+{-# OPTIONS_GHC -Wall -O2 #-}
 module Main where
 
 import Control.Arrow ((&&&))
 import Data.List
 import qualified Data.HashSet as S
 
-type P = (Int, Int, Int)
+type P = (Int, Int, Int, Int)
 type S = S.HashSet P
 
 counts :: Ord a => [a] -> [(a, Int)]
@@ -20,15 +19,16 @@ nhood :: [Int]
 nhood = [-1..1]
 
 neighbours :: P -> [P]
-neighbours pt@(x,y,z) = [ pt' |
+neighbours pt@(x,y,z,w) = [ pt' |
   dx <- nhood,
   dy <- nhood,
   dz <- nhood,
-  let pt' = (x + dx, y + dy, z + dz),
+  dw <- nhood,
+  let pt' = (x + dx, y + dy, z + dz, w + dw),
   pt' /= pt]
 
 inpToSet :: [String] -> S
-inpToSet inp = S.fromList [ (i,j,0) |
+inpToSet inp = S.fromList [ (i,j,0,0) |
   (i, row) <- zip [0..] inp,
   (j, elm) <- zip [0..] row,
   elm == '#']
