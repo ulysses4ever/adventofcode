@@ -5,15 +5,14 @@ build-depends: base, unordered-containers
 {-# OPTIONS_GHC -Wall -O2 #-}
 module Main where
 
-import Control.Arrow ((&&&))
 import Data.List
+import Data.Bool
 import qualified Data.HashSet as S
+import qualified Data.HashMap.Strict as M
 
 type P = (Int, Int, Int, Int)
 type S = S.HashSet P
-
-counts :: Ord a => [a] -> [(a, Int)]
-counts = map (head &&& length) . group . sort
+type M = M.HashMap P Int
 
 nhood :: [Int]
 nhood = [-1..1]
@@ -34,9 +33,14 @@ inpToSet inp = S.fromList [ (i,j,0,0) |
   elm == '#']
 
 step :: S -> S
-step alive = S.fromList [pt |
-  (pt, n) <- counts $ neighbours =<< S.toList alive,
-  n == 3 || (n == 2 && pt `S.member` alive)]
+step alive = alive'
+  where
+  ins m p = M.insertWith (+) p 1 m
+  cs = S.foldl' (\m a -> foldl' ins m $ neighbours a) M.empty alive :: M
+  alive' = M.foldrWithKey'
+    (\pt n s -> bool s (pt `S.insert` s) (n == 3 || (n == 2 && pt `S.member` alive)))
+    S.empty 
+    cs
 
 -- Main
 
