@@ -7,10 +7,9 @@ module Main where
 
 import Control.Arrow ((&&&))
 import Data.List
-import qualified Data.HashSet as S
 
 type P = (Int, Int, Int, Int)
-type S = S.HashSet P
+type S = [P]
 
 counts :: Ord a => [a] -> [(a, Int)]
 counts = map (head &&& length) . group . sort
@@ -28,15 +27,15 @@ neighbours pt@(x,y,z,w) = [ pt' |
   pt' /= pt]
 
 inpToSet :: [String] -> S
-inpToSet inp = S.fromList [ (i,j,0,0) |
+inpToSet inp = [ (i,j,0,0) |
   (i, row) <- zip [0..] inp,
   (j, elm) <- zip [0..] row,
   elm == '#']
 
 step :: S -> S
-step alive = S.fromList [pt |
-  (pt, n) <- counts $ neighbours =<< S.toList alive,
-  n == 3 || (n == 2 && pt `S.member` alive)]
+step alive = [pt |
+  (pt, n) <- counts $ neighbours =<< alive,
+  n == 3 || (n == 2 && pt `elem` alive)]
 
 -- Main
 
@@ -47,6 +46,6 @@ getInput =
 main :: IO ()
 main = do
   steps <- iterate step . inpToSet <$> getInput
-  let res = S.size $ steps !! 6
+  let res = length $ steps !! 6
   print res
 
