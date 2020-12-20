@@ -21,9 +21,6 @@ import Data.IntMap.Strict ((!))
 
 type Str = String
 type Parser = Parsec Void Str
-type ParserV = Parser ()
-type RTable = [(Int,Rule)]
-type PTable = M.IntMap ParserV
 
 data Rule =
   Chr Char |
@@ -51,6 +48,10 @@ readRecRule = fromJust . parseMaybe recRuleParser
 
 -- Compile grammar rules to parsers
 
+type ParserV = Parser ()
+type RTable = [(Int,Rule)]
+type PTable = M.IntMap ParserV
+
 -- Compile a grammar rule to a parser consulting a table of already compiled rules
 compileRule :: PTable -> Rule -> ParserV
 compileRule _ (Chr c) =
@@ -74,16 +75,25 @@ readRuleTableAndStrs inp = (rtable, strs)
   [lines -> grammar, lines -> strs] = splitOn "\n\n" inp
   rtable = map identify grammar
 
+test = do
+  inp <- readFile "input/day-19-test-3-part-2.txt"
+  let (rtable, _strs) = readRuleTableAndStrs inp
+      ptable = compileTable rtable
+      p0 = ptable ! 0
+      r = either errorBundlePretty show $ parse p0 "test" "aaaaabbaabaaaaababaa"
+  pPrint r
+
 -- Main
 
 main :: IO ()
 main = do
-  inp <- readFile "input/day-19.txt"
+  inp <- readFile "input/day-19-test-3-part-2.txt"
   let (rtable, strs) = readRuleTableAndStrs inp
       ptable = compileTable rtable
       p0 = ptable ! 0
-      res1 = length . filter isJust . map (parseMaybe p0) $ strs
-      res2 = '-'
+      ps = map (parseMaybe p0) $ strs
+      res1 = length . filter isJust $ ps
+      res2 = zip ps strs
   pPrint res1
-  print res2
+  pPrint res2
 
