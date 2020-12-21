@@ -2,11 +2,13 @@
 {- cabal:
 build-depends: base, megaparsec, parser-combinators, containers, extra
 -}
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, TupleSections #-}
 {-# OPTIONS_GHC -Wall -O1 #-}
 module Main where
 
+import Debug.Trace
 import Text.Megaparsec
+import Text.Megaparsec.Debug
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Data.Maybe
@@ -48,24 +50,34 @@ readRecRule = fromJust . parseMaybe recRuleParser
 
 -- Compile grammar rules to parsers
 
-type ParserV = Parser ()
+type ParserV = Parser [Int]
 type RTable = [(Int,Rule)]
 type PTable = M.IntMap ParserV
 
 -- Compile a grammar rule to a parser consulting a table of already compiled rules
-compileRule :: PTable -> Rule -> ParserV
-compileRule _ (Chr c) =
-  char c >> pure ()
-compileRule t (Rec iis) = foldl1' ((<|>) . try) $ map compileAlt iis
+compileRule :: PTable -> (Int, Rule) -> (Int, ParserV)
+compileRule _ (i, Chr c) =
+  (i, dbg (show i ++ "-leaf") (char c >> pure [i]))
+compileRule t (i, Rec as) = (i, (i:) <$> palts)
+  
   where
+  as' = reverse $ sortOn length as
+  palts = case map compileAlt as' of
+    [a1, a2] -> (dbg (show i ++ "-left") $ try a1) <|> dbg (show i ++ "-right") a2
+    [a] -> dbg (show i ++ "-single") $ a
+    _ -> error "Unexpected number of alternatives"
   compileAlt :: [Int] -> ParserV
-  compileAlt = foldl1' (>>) . map (t !)
+  compileAlt alt = foldl1' seq' (map (t !) alt)
+  seq' ps p = do
+    ns1 <- ps
+    ns2 <- p
+    pure $ ns1 ++ ns2
 
 -- Compile a table or rules into a table parsers lazily. Mutually recursive with `compileRule`
 compileTable :: RTable -> PTable
 compileTable rtable = res
   where
-  res = M.fromList $ map (second $ compileRule res) rtable
+  res = M.fromList $ map (compileRule res) rtable
 
 -- Reading the rule table
 
@@ -87,7 +99,7 @@ test = do
 
 main :: IO ()
 main = do
-  inp <- readFile "input/day-19-test-3-part-2.txt"
+  inp <- readFile "input/day-19-part-2.txt"
   let (rtable, strs) = readRuleTableAndStrs inp
       ptable = compileTable rtable
       p0 = ptable ! 0
@@ -95,5 +107,5 @@ main = do
       res1 = length . filter isJust $ ps
       res2 = zip ps strs
   pPrint res1
-  pPrint res2
+  --pPrint res2
 
