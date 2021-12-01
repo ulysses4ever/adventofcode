@@ -23,7 +23,8 @@ import qualified Data.Vector.Unboxed.Mutable as VM
 -- rows, cols, table as a map Int -> Char
 type C = V.MVector (PrimState IO) Char
 type CPure = V.Vector Char
-type CL = (Int, Int, C)
+type CL = (Int, Int, CPure)
+type CtxNoNb = (?rw :: Int, ?cl :: Int)
 type Ctx = (?rw :: Int, ?cl :: Int, ?ns :: Ns)
 
 -----------------   generic aux stuff
@@ -52,17 +53,17 @@ prt v = foldM_ s () is
 
 -- 1-dimensional indices for a field of size rw x cl
 is ::
-  Ctx =>
+  CtxNoNb =>
   [Int]
 is = [0 .. ?rw * ?cl - 1]
 
 posToAbs ::
-  Ctx =>
+  CtxNoNb =>
   (Int, Int) -> Int
 posToAbs (ri, ci) = ri * ?cl + ci
 
 absToPos ::
-  Ctx =>
+  CtxNoNb =>
   Int -> (Int, Int)
 absToPos i = i `divMod` ?cl
 
@@ -144,9 +145,12 @@ weight2 ::
   Ctx =>
   C -> Int -> IO Int
 weight2 v i = undefined
+  where
+  nh = ?ns VV.! i
+  took_cnt = V.length $ V.filter (== took) $ V.map (v !) nh
 
 nhood ::
-  Ctx =>
+  (?rw :: Int, ?cl :: Int) =>
   CPure -> Int -> N
 nhood v i = res
   where
@@ -189,17 +193,18 @@ getInput = do
       cols = length $ ls !! 0
       rows = length ls
       cts' = filter (/= '\n') cts
-  (rows, cols, ) <$> (V.unsafeThaw $ V.fromList cts')
+  return (rows, cols, V.fromList cts')
 
 main :: IO ()
 main = do
-  (rw, cl, inp1) <- getInput
-  (_, _, inp2)   <- getInput
+  (rw, cl, inp) <- getInput
+  inp1 <- V.thaw inp
+  inp2 <- V.thaw inp -- V.unsafeThaw?
   res1 <-
     let ?rw = rw
         ?cl = cl
-        ?ns = VV.empty -- FIXME: compute all neighbourhoods
-        -- smth like `VV.fromList $ map (nhood inp1) is`
+    in let
+        ?ns = VV.fromList $ map (nhood inp) is
     in do
         loop inp1 inp2
         res1' <- foldM
