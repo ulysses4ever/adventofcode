@@ -14,7 +14,7 @@ main = do
     [y, d] -> return (y, d)
     [d]    -> return (defaultYear, d)
     _      -> error "Provide one (day) or two (year, day) arguments"
-  let Just (s1, s2) = lookup d (allSolutions y)
+  let (s1, s2) = (allSolutions y) !! (read d)
   input <- readFile $ "Y" ++ y ++ "/input/day-" ++ d ++ ".txt" 
   s1 input
   s2 input
