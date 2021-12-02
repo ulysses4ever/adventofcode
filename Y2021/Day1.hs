@@ -4,14 +4,17 @@ module Y2021.Day1 (solve1, solve2) where
 import Data.List
 
 solve1 :: String -> IO ()
-solve1 input = print $ countInc (map read $ lines input)
+solve1 input = print $ countInc 1 $ parse input
 
-countInc :: [Int] -> Int
-countInc xs = foldl' 
+parse :: String -> [Int]
+parse input = map read $ lines input
+
+countInc :: Int -> [Int] -> Int
+countInc n xs = foldl' 
   (\s (x, x') -> if x < x' then s + 1 else s) 
   0
-  (zip xs $ tail xs)
+  (zip xs $ drop n xs)
 
 solve2 :: String -> IO ()
-solve2 _input = print ()
+solve2 input = print $ countInc 3 $ parse input
 
