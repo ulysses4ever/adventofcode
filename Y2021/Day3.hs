@@ -37,33 +37,43 @@ parse :: String -> [Rec]
 parse = map readRec . lines
 
 type Child = (Int, T)
-data T = T Child Child
+data T = N Child Child
+       | L
+       deriving Show
 
-emptyC = (0, undefined)
+emptyC = (0, L)
 isEmptyC (0, _) = True
 isEmptyC _ = False
-emptyT = T emptyC emptyC
+emptyT = L
 isEmptyT :: T -> Bool
-isEmptyT (T c0 c1) = isEmptyC c0 && isEmptyC c1
+isEmptyT L = True
+isEmptyT _ = False
+subtr (_, t) = t
 
 insertT :: T -> Rec -> T
-insertT _ []     = T emptyC emptyC
-insertT (T c0@(n0, t0) c1@(n1, t1)) (x:xs) = T c0' c1'
+insertT _ []     = N emptyC emptyC
+insertT L (0:xs)     = N (1, insertT emptyT xs) emptyC
+insertT L (1:xs)     = N emptyC (1, insertT emptyT xs)
+insertT (N c0@(n0, t0) c1@(n1, t1)) (x:xs) = N c0' c1'
   where
   (c0', c1') = case x of
     0 -> ((n0+1, insertT t0 xs), c1)
     1 -> (c0, (n1+1, insertT t1 xs))
     _ -> error "unexpected bit"
 
+-- count
+
 showT :: T -> String
-showT (T c0 c1) =
-  "Tree: fromList:\n" ++ go c0 "0" ++ go c1 "1"
+showT L = "Tree: Empty"
+showT t =
+  "Tree: fromList:" ++ go t []
   where
-  go c@(_, t) bs
-    | isEmptyC c = reverse $ tail bs
-    | otherwise  =
-      case t of
-        (T c0 c1) -> go c0 ('0':bs) ++ "\n" ++ go c1 ('1':bs)
+  go L bs = ""
+  go (N c0 c1) bs =
+    if isEmptyC c0 && isEmptyC c1
+    then '\n' : reverse bs
+    else
+      go (subtr c0) ('0':bs) ++ go (subtr c1) ('1':bs)
 
 
 readRec = map digit
