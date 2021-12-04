@@ -4,6 +4,7 @@ module Y2021.Day3 (solve) where
 
 import Data.List
 import Debug.Trace
+import GHC.Stack
 
 -- first arg is Part
 solve :: Int -> String -> IO ()
@@ -38,42 +39,47 @@ parse = map readRec . lines
 
 type Child = (Int, T)
 data T = N Child Child
-       | L
        deriving Show
 
-emptyC = (0, L)
+emptyC = (0, undefined)
 isEmptyC (0, _) = True
 isEmptyC _ = False
-emptyT = L
+emptyT = N emptyC emptyC
 isEmptyT :: T -> Bool
-isEmptyT L = True
-isEmptyT _ = False
+isEmptyT (N c0 c1) = isEmptyC c0 && isEmptyC c1
 subtr (_, t) = t
 
 insertT :: T -> Rec -> T
 insertT _ []     = N emptyC emptyC
-insertT L (0:xs)     = N (1, insertT emptyT xs) emptyC
-insertT L (1:xs)     = N emptyC (1, insertT emptyT xs)
-insertT (N c0@(n0, t0) c1@(n1, t1)) (x:xs) = N c0' c1'
+insertT t@(N c0@(n0, t0) c1@(n1, t1)) (x:xs)
+  = N c0' c1'
   where
+  t0' = if isEmptyC c0 then emptyT else t0
+  t1' = if isEmptyC c1 then emptyT else t1
   (c0', c1') = case x of
-    0 -> ((n0+1, insertT t0 xs), c1)
-    1 -> (c0, (n1+1, insertT t1 xs))
+    0 -> ((n0+1, insertT t0' xs), c1)
+    1 -> (c0, (n1+1, insertT t1' xs))
     _ -> error "unexpected bit"
 
--- count
+locate :: (Child -> Child -> Int) -> T -> Rec
+locate p = undefined
 
+{-
+N (1,N (1,N emptyC (1,N emptyC (1,N emptyC emptyC))) emptyC) (1,N (1,N (1,N (1,N emptyC emptyC) emptyC) emptyC) emptyC)
+
+-}
 showT :: T -> String
-showT L = "Tree: Empty"
 showT t =
   "Tree: fromList:" ++ go t []
   where
-  go L bs = ""
   go (N c0 c1) bs =
     if isEmptyC c0 && isEmptyC c1
     then '\n' : reverse bs
     else
-      go (subtr c0) ('0':bs) ++ go (subtr c1) ('1':bs)
+      s0 ++ s1
+    where
+    s0 = if isEmptyC c0 then "" else go (subtr c0) ('0':bs)
+    s1 = if isEmptyC c1 then "" else go (subtr c1) ('1':bs)
 
 
 readRec = map digit
