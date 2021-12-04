@@ -1,10 +1,8 @@
 {-# language BangPatterns #-}
-{-# language ViewPatterns   #-}
 module Y2021.Day3 (solve) where
 
 import Data.List
 import Debug.Trace
-import GHC.Stack
 
 -- first arg is Part
 solve :: Int -> String -> IO ()
@@ -23,12 +21,13 @@ compute 1 (r:rs) = gamma * epsilon
   merge :: Sums -> Rec -> Sums
   merge = zipWith (+)
 
-compute 2 rs = trace (showT tree) 0
+compute 2 rs = oxy * co2
   where
-  !tree = foldl' insertT emptyT rs
-
-readBin :: [Int] -> Int
-readBin = foldl' (\s x -> s*2 + x) 0
+  tree = foldl' insertT emptyT rs
+  oxyB = locate oxyP tree
+  oxy = readBin oxyB
+  co2B = locate co2P tree
+  co2 = readBin co2B
 
 type Sums = [Int]
 data St = S !Sums !Int
@@ -39,7 +38,6 @@ parse = map readRec . lines
 
 type Child = (Int, T)
 data T = N [Child]
-       deriving Show
 
 emptyC = (0, undefined)
 isEmptyC (0, _) = True
@@ -61,13 +59,27 @@ insertT t@(N [c0@(n0, t0), c1@(n1, t1)]) (x:xs)
     1 -> (c0, (n1+1, insertT t1' xs))
     _ -> error "unexpected bit"
 
-locate :: (Child -> Child -> Int) -> T -> Rec
-locate p = undefined
+locate :: ([Child] -> Int) -> T -> Rec
+locate p = reverse . go []
+  where
+  go bs t@(N cs)
+    | isEmptyT t = bs
+    | isEmptyC (cs !! 0) = go (1:bs) (subtr $ cs !! 1)
+    | isEmptyC (cs !! 1) = go (0:bs) (subtr $ cs !! 0)
+    | otherwise = go (b:bs) (subtr c)
+      where
+      b = p cs
+      c = cs !! b
 
-{-
-N (1,N (1,N emptyC (1,N emptyC (1,N emptyC emptyC))) emptyC) (1,N (1,N (1,N (1,N emptyC emptyC) emptyC) emptyC) emptyC)
+oxyP [(n0,_), (n1,_)]
+  | n0 > n1   = 0
+  | otherwise = 1
 
--}
+co2P [(n0,_), (n1,_)]
+  | n0 > n1   = 1
+  | otherwise = 0
+
+-- Debug
 showT :: T -> String
 showT t =
   "Tree: fromList:" ++ go t []
@@ -81,8 +93,18 @@ showT t =
     s0 = if isEmptyC c0 then "" else go (subtr c0) ('0':bs)
     s1 = if isEmptyC c1 then "" else go (subtr c1) ('1':bs)
 
+instance Show T where
+  show (N cs) = "(N" ++ (concatMap s cs) ++ ")"
+    where
+    s (n,t) = if n == 0 then "(0, _)" else
+      "(" ++ show n ++ "," ++ show t ++ ")"
 
+
+-- Aux
 readRec = map digit
   where
   digit '0' = 0
   digit '1' = 1
+
+readBin :: Rec -> Int
+readBin = foldl' (\s x -> s*2 + x) 0
