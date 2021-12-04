@@ -27,6 +27,8 @@ matSize :: Int
 matSize = 5
 
 data St = S Ns [Mt] deriving Show
+data St' = S' Ws St  deriving Show
+type Ws = Vector Win
 type Ns = [Int]
 type Pos = (Int,Int)
 type MCt = IntMap Pos
@@ -41,9 +43,28 @@ compute 1 s = go s
    Left score -> score
    Right s'   -> go s'
 
-compute 2 s = res
+compute 2 s@(S _ ms) = go (S' (V.replicate (length ms) N) s)
   where
-  res = 0
+  go :: St' -> Int
+  go s = case update' s of
+   Left score -> score
+   Right s'   -> go s'
+
+update' :: St' -> Either Int St'
+update' (S' ws (S (n:ns) ms)) = res
+  where
+  rs = map (updateBoard n) ms
+  mm = findIndices (\(i, (w, _)) -> w == Y && ws V.! i == N) (zip [0..] rs)
+  ms' = map snd rs
+  chk ws i = V.modify (\v -> VM.write v i Y) ws
+  res = case mm of
+    [i] ->
+      if V.all (== Y) ws'
+      then Left $ score n (ms' !! i)
+      else Right (S' ws' $ S ns ms')
+      where
+      ws' = chk ws i
+    xs -> Right (S' (foldl' chk ws mm) $ S ns ms')
 
 update :: St -> Either Int St
 update (S (n:ns) ms) = res
@@ -59,7 +80,7 @@ score n (Mt mct fl) = n * sum unckd
   unckd = map fst $ filter (\(x, (r,c)) -> not (fl V.! r V.! c)) $ M.toList mct
 
 data Win = Y | N
-  deriving Eq
+  deriving (Eq, Show)
 
 updateBoard :: Int -> Mt -> (Win, Mt)
 updateBoard n m@(Mt mct fl) = case M.lookup n mct of
