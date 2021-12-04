@@ -38,21 +38,21 @@ parse :: String -> [Rec]
 parse = map readRec . lines
 
 type Child = (Int, T)
-data T = N Child Child
+data T = N [Child]
        deriving Show
 
 emptyC = (0, undefined)
 isEmptyC (0, _) = True
 isEmptyC _ = False
-emptyT = N emptyC emptyC
+emptyT = N [emptyC, emptyC]
 isEmptyT :: T -> Bool
-isEmptyT (N c0 c1) = isEmptyC c0 && isEmptyC c1
+isEmptyT (N cs) = all isEmptyC cs
 subtr (_, t) = t
 
 insertT :: T -> Rec -> T
-insertT _ []     = N emptyC emptyC
-insertT t@(N c0@(n0, t0) c1@(n1, t1)) (x:xs)
-  = N c0' c1'
+insertT _ []     = N [emptyC, emptyC]
+insertT t@(N [c0@(n0, t0), c1@(n1, t1)]) (x:xs)
+  = N [c0', c1']
   where
   t0' = if isEmptyC c0 then emptyT else t0
   t1' = if isEmptyC c1 then emptyT else t1
@@ -72,7 +72,7 @@ showT :: T -> String
 showT t =
   "Tree: fromList:" ++ go t []
   where
-  go (N c0 c1) bs =
+  go (N [c0, c1]) bs =
     if isEmptyC c0 && isEmptyC c1
     then '\n' : reverse bs
     else
