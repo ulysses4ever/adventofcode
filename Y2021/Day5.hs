@@ -34,7 +34,10 @@ compute 2 (r:rs) = res
 updateState :: St -> Line -> St
 updateState m l = {-trace (showM m) $-} foldl' upd m $ fillLine l
   where
-  upd m p = M.alter ins p m
+  maxed m p = case M.lookup p m of
+    Nothing -> False
+    Just n  -> n == 2
+  upd m p = if maxed m p then m else M.alter ins p m
   ins Nothing = Just 1
   ins (Just n) = Just (n+1)
 
