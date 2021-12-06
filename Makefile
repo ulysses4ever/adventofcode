@@ -1,3 +1,4 @@
+DEPS := $(shell cat deps.txt)
 all: build
 
 build:
@@ -5,4 +6,4 @@ build:
 run-%:
 	./Main $*
 deps:
-	cabal install --lib --package-env . `cat deps.txt`
+	cabal install --lib --package-env . $(DEPS)
