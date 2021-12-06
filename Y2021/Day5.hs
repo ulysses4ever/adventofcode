@@ -14,8 +14,10 @@ import Debug.Trace
 import Data.List.Extra (split, chunksOf)
 import Data.Tuple.Extra (dupe)
 
-import qualified Data.Map.Strict as M
-import Data.Map.Strict (Map)
+import qualified Data.HashMap.Strict as M
+import Data.HashMap.Strict (HashMap)
+
+type Map = HashMap
 
 -- first arg is Part #
 solve :: Int -> String -> IO ()
