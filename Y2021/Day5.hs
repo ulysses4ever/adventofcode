@@ -31,10 +31,19 @@ compute n rs
   = rs
   & V.concatMap (fillLine n)
   & V.modify V.sort
-  & V.toList -- vector doesn't have group :'-(
-  & group    -- cf. https://github.com/haskell/vector/issues/192
-  & filter ((> 1) . length)
+  -- & V.toList -- vector doesn't have group :'-(
+  & groupV (==)    -- cf. https://github.com/haskell/vector/issues/192
+  & filter ((> 1) . V.length)
   & length
+
+groupV :: V.Unbox a => (a -> a -> Bool) -> Vector a -> [Vector a]
+groupV eq v
+  | V.null v = []
+  | True =  (V.cons x ys) : groupV eq zs
+  where
+    x = V.unsafeHead v
+    xs = V.unsafeTail v
+    (ys,zs) = V.span (eq x) xs
 
 fillLine :: Int -> Line -> Vector Pt
 fillLine n (x1,y1,x2,y2) = let
