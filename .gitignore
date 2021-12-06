@@ -1,5 +1,6 @@
 Main
 scratch
+*.html
 
 dist
 dist-*
