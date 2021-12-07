@@ -14,7 +14,7 @@ solve n = print . compute n . parse
 type Rec = (Int,Int)
 data St = S {
   total :: !Int,
-  recs  :: [Rec] }
+  recs  :: [[Rec]] }
 
 days :: Int
 days = 80
@@ -22,7 +22,7 @@ days = 80
 compute :: Int -> [Rec] -> Int
 compute 1 rs = res
   where
-  initSt = S 0 rs
+  initSt = S 0 [rs]
   res = total . head . dropWhile (\s -> not $ null $ recs s) . iterate update $ initSt
 
 compute 2 rs = res
@@ -30,12 +30,13 @@ compute 2 rs = res
   res = 0
 
 update :: St -> St
-update (S n (r:rs)) = S (n+1) (rs ++ rs')
+update (S n ((r:rs):rss)) = S (n+1) (rs : rs' : rss)
   where
   (d, ttl) = r
   firstTtl = ttl - d
   ttls = takeWhile (> 0) [firstTtl, firstTtl - 6..]
   rs' = zip [8,8..] ttls
+update (S n ([]:rss)) = update $ S n rss
 
 
 parse :: String -> [Rec]
