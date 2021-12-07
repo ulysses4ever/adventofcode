@@ -7,41 +7,38 @@ import Aux
 import Data.List
 import Debug.Trace
 
+import qualified Data.Map.Lazy as M
+import Data.Map.Strict (Map)
+import Data.Maybe (fromJust)
+
+type M = Map (Int, Int) Integer
+
 -- first arg is Part #
 solve :: Int -> String -> IO ()
-solve n = print . compute n . parse
+solve n = print . compute n . parse n
 
 type Rec = (Int,Int)
-data St = S {
-  total :: !Int,
-  recs  :: [[Rec]] }
-  deriving Show
 
-days :: Int
-days = 256
+days :: Int -> Int
+days 1 = 80
+days 2 = 256
+days _ = error "unknown part"
 
-compute :: Int -> [Rec] -> Int
-compute 1 rs = res
+compute :: Int -> [Rec] -> Integer
+compute _ rs = genericLength rs + sum (map (fromJust . (`M.lookup` m)) rs)
+
+f :: Int -> Int -> Integer
+f d t
+  | firstTtl < 0 = 0
+  | otherwise = z
   where
-  initSt = S 0 [rs]
-  res = total . head . dropWhile (not . null . recs) . iterate update $ initSt
+    firstTtl = t - d - 1
+    cs = [x | t' <- takeWhile (>= 0) [firstTtl, firstTtl - 7..],
+             let x = fromJust $ M.lookup (8,t') m ]
+    z = genericLength cs + sum cs
 
-compute 2 rs = res
-  where
-  res = 0
+m :: M
+m = M.fromList [((d,t), f d t) | d <- [0..8], t <- [0..256] ]
 
-update :: St -> St
-update (S n ((r:rs):rss)) =  -- traceShow res
-  res
-  where
-  res = S (n+1) (rs : rs' : rss)
-  (d, ttl) = r
-  firstTtl = ttl - d - 1
-  ttls = takeWhile (>= 0) [firstTtl, firstTtl - 7..]
-  rs' = zip [8,8..] ttls
-update s@(S n ([]:rss)) = -- traceShow s $
-  update $ S n rss
-update s = s
-
-parse :: String -> [Rec]
-parse = map (,days) . readIntsSep ','
+parse :: Int -> String -> [Rec]
+parse n = map (,days n) . readIntsSep ','

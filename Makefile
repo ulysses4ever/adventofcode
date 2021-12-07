@@ -2,7 +2,7 @@ DEPS := $(shell cat deps.txt)
 all: build
 
 build:
-	ghc Main.hs
+	ghc -threaded Main.hs
 run-%:
 	./Main $*
 deps:
