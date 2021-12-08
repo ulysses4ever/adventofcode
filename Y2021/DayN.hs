@@ -1,6 +1,7 @@
 {-# language BangPatterns #-}
 module Y2021.DayN (solve) where
 
+import Aux
 import Data.List
 import Debug.Trace
 
@@ -12,11 +13,11 @@ type Rec = [Int]
 data St = S
 
 compute :: Int -> [Rec] -> Int
-compute 1 (r:rs) = res
+compute 1 rs = res
   where
   res = 0
 
-compute 2 (r:rs) = res
+compute 2 rs = res
   where
   res = 0
 
