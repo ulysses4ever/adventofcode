@@ -14,7 +14,7 @@ solve n = print . compute n . parse
 type Rec = Int
 
 compute :: Int -> [Rec] -> Int
-compute n = sumsToMidpoint n <*> (findMidpoint n)
+compute n = sumsToMidpoint n <*> findMidpoint n
 
 findMidpoint :: Int -> [Rec] -> Int
 findMidpoint 1 rs = sort rs !! (length rs `div` 2) -- median
