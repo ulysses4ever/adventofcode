@@ -4,6 +4,7 @@ module Y2021.Day10 (solve) where
 import Aux
 import Data.List
 import Debug.Trace
+import Data.Either (lefts, rights)
 
 -- first arg is Part #
 solve :: Int -> String -> IO ()
@@ -15,21 +16,12 @@ type St = String
 compute :: Int -> [Rec] -> Int
 compute n rs = if n == 1 then res1 else res2
   where
-  res1 = sum $ map (balance []) rs
-  rs'  = filter ((== 0) . balance []) rs
-  cs = map (compl []) rs'
-  res2 = winner $ map score cs
+  rs' = map (balance []) rs
+  res1 = sum $ lefts rs'
+  res2 = winner $ map score $ rights rs'
 
 winner :: [Int] -> Int
 winner ss = sort ss !! (length ss `div` 2)
-
-compl :: St -> Rec -> St
-compl stk (c:cs)
-  | c `elem` op = compl (c:stk) cs
-  | otherwise   = case stk of
-      (s:stk') -> if c == cl s then compl stk' cs else error "illegal"
-      _        -> error "illegal"
-compl s _ = map cl s
 
 score :: St -> Int
 score = foldl' (\z c -> z * 5 + s c) 0
@@ -47,13 +39,13 @@ cl c = case c of
   '{' -> '}'
   '<' -> '>'
 
-balance :: St -> Rec -> Int
+balance :: St -> Rec -> Either Int St
 balance stk (c:cs)
   | c `elem` op = balance (c:stk) cs
   | otherwise   = case stk of
-      (s:stk') -> if c == cl s then balance stk' cs else cost c
-      _        -> 0
-balance _ _ = 0
+      (s:stk') -> if c == cl s then balance stk' cs else Left $ cost c
+      _        -> error "illegal"
+balance s _ = Right $ map cl s
 
 cost c = case c of
   ')' -> 3
