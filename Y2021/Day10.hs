@@ -13,13 +13,32 @@ type Rec = String
 type St = String
 
 compute :: Int -> [Rec] -> Int
-compute 1 rs = res
+compute n rs = if n == 1 then res1 else res2
   where
-  res = sum $ map (balance []) rs
+  res1 = sum $ map (balance []) rs
+  rs'  = filter ((== 0) . balance []) rs
+  cs = map (compl []) rs'
+  res2 = winner $ map score cs
 
-compute 2 rs = res
+winner :: [Int] -> Int
+winner ss = sort ss !! (length ss `div` 2)
+
+compl :: St -> Rec -> St
+compl stk (c:cs)
+  | c `elem` op = compl (c:stk) cs
+  | otherwise   = case stk of
+      (s:stk') -> if c == cl s then compl stk' cs else error "illegal"
+      _        -> error "illegal"
+compl s _ = map cl s
+
+score :: St -> Int
+score = foldl' (\z c -> z * 5 + s c) 0
   where
-  res = 0
+    s ')' = 1
+    s ']' = 2
+    s '}' = 3
+    s '>' = 4
+    s _   = error "unexpected"
 
 op = "([{<"
 cl c = case c of
