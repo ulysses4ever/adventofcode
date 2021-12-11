@@ -17,11 +17,10 @@ type Rec = CInt
 data St = S
 
 compute :: Int -> M -> CInt
-compute 1 m = traceShow m res
+compute 1 m = res -- traceShow m
   where
-  f' r n c = n + checkMin m r c
-  f n r = foldl' (f' r) n [1..cols m - 1]
-  res = foldl' f 0 [1..rows m - 1]
+  f (r,c) n = n + checkMin m r c
+  res = foldr f 0 [(r,c) | r <- [1..rows m - 1], c <- [1..cols m - 1]]
 
 compute 2 rs = res
   where
@@ -34,14 +33,16 @@ checkMin m r c |
   m `atIndex` (r,c) < m `atIndex` (r,c+1)  = 1 + m `atIndex` (r,c)
   | otherwise = 0
 
+bord :: Rec
+bord = 9
+
 parse :: String -> M
 parse s = fromLists m'
   where
     m = map (map readRec) . lines $ s
     cols = length $ head m
-    mx = 10
-    bound = take (cols + 2) $ repeat mx
-    addBounds xs = mx : xs ++ [mx]
+    bound = take (cols + 2) $ repeat bord
+    addBounds xs = bord : xs ++ [bord]
     m' = bound : (map addBounds m) ++ [bound]
 
 readRec :: Char -> Rec
