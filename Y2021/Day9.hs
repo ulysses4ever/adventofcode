@@ -4,6 +4,10 @@ module Y2021.Day9 (solve) where
 
 import Aux
 import Data.List
+import GHC.Exts (sortWith)
+import Data.Ord
+import qualified Data.Set as S
+import Control.Arrow (first)
 import Debug.Trace
 import Foreign.C.Types
 import Numeric.LinearAlgebra (Matrix, fromLists, atIndex, cols, rows)
@@ -14,24 +18,41 @@ solve n = print . compute n . parse
 
 type M = Matrix CInt
 type Rec = CInt
-data St = S
+type Pt = (Int,Int)
+type S = S.Set Pt
 
-compute :: Int -> M -> CInt
-compute 1 m = res -- traceShow m
+compute :: Int -> M -> Int
+compute n m = if n == 1 then fromIntegral res1 else res2 -- traceShow m
   where
-  f (r,c) n = n + checkMin m r c
-  res = foldr f 0 [(r,c) | r <- [1..rows m - 1], c <- [1..cols m - 1]]
+  f pt (n, mins) = first (n +) $ checkMin m pt mins
+  (res1, mins) = foldr f (0,[]) [(r,c) | r <- [1..rows m - 1], c <- [1..cols m - 1]]
 
-compute 2 rs = res
-  where
-  res = 0
+  vis s p = any (p `S.member`) s
+  f' s p = if vis s p then s else dfs m p S.empty : s
+  res2 = product . take 3 . sortWith Down . map S.size $ foldl' f' [] mins
 
-checkMin m r c |
-  m `atIndex` (r,c) < m `atIndex` (r-1,c) &&
-  m `atIndex` (r,c) < m `atIndex` (r,c-1) &&
-  m `atIndex` (r,c) < m `atIndex` (r+1,c) &&
-  m `atIndex` (r,c) < m `atIndex` (r,c+1)  = 1 + m `atIndex` (r,c)
-  | otherwise = 0
+dfs g cur vis =
+  foldl'
+    (\vis nxt -> if nxt `S.member` vis then vis else dfs g nxt vis)
+    (cur `S.insert` vis)
+    (open g cur)
+
+open :: M -> Pt -> [Pt]
+open m pt = filter ((/= bord). (m `atIndex`)) (nhood pt)
+
+-- 4-neighbourhood of a 2D integer point
+nhood :: Pt -> [Pt]
+nhood (r,c) = [(r+dr,c+dc) |
+  dr <- [-1..1], dc <- [-1..1],
+  dr /= 0 || dc /= 0,
+  dr == 0 || dc == 0]
+
+-- checks for local minimum, and records if success
+checkMin m pt mins
+  | and [m `atIndex` pt < m `atIndex` pt' | pt' <- nhood pt]
+    = (1 + m `atIndex` pt, pt:mins)
+  | otherwise
+    = (0,mins)
 
 bord :: Rec
 bord = 9
