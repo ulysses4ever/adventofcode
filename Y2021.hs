@@ -10,6 +10,7 @@ import Y2021.Day7
 import Y2021.Day8
 import Y2021.Day9
 import Y2021.Day10
+import Y2021.Day11
 
 solutions =
   [ undefined -- all hail 1-based indexing
@@ -23,4 +24,5 @@ solutions =
   , (Y2021.Day8.solve 1, Y2021.Day8.solve 2)
   , (Y2021.Day9.solve 1, Y2021.Day9.solve 2)
   , (Y2021.Day10.solve 1, Y2021.Day10.solve 2)
+  , (Y2021.Day11.solve 1, Y2021.Day11.solve 2)
   ]
