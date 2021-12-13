@@ -25,7 +25,7 @@ type M = M.Map Pt Cell
 type Hit = (Pt, I)
 
 compute :: Int -> [Rec] -> Int
-compute 1 rs = traceShow states res
+compute 1 rs = trace (intercalate "\n" $ map (showMat "" rw cl) states) res
   where
   rw = length rs
   cl = length (head rs)
@@ -33,9 +33,10 @@ compute 1 rs = traceShow states res
     [ ((fromIntegral r,fromIntegral c), rs !! r !! c) |
       r <- [0..rw-1], c<-[0..cl-1]]
   iters = 2
+  states :: [M]
   states = take iters $
-    iterate (step (fromIntegral rw) (fromIntegral cl)) (initial, 0)
-  res = sum $ map snd states
+    iterate (step (fromIntegral rw) (fromIntegral cl)) initial
+  res = sum $ map (fromIntegral . M.foldl' (\s cell -> s + snd cell) 0) states
 
 compute 2 rs = res
   where
@@ -44,39 +45,35 @@ compute 2 rs = res
 maxLevel :: Int8
 maxLevel = 9
 
-step :: I -> I -> (M, Int) -> (M, Int)
-step rw cl (m, n) = (m'' , n + n')
+step :: I -> I -> M -> M
+step rw cl m = m''
   where
     valid (r,c) = 0 <= r && r < rw && 0 <= c && c < cl
-    (flashed, m') = M.mapAccumWithKey
+
+    (initFlashed, m') = M.mapAccumWithKey
       (\fl pt (e,f) -> if e == maxLevel
         then (pt:fl, (0,f+1))
         else (fl, (e+1,f)))
       [] m
-    n' :: Int
-    n' = sum $ map (length . snd) steps
-    (steps, (m'',_):_) =
+
+    (_, (m'',_):_) =
       break (not . null . snd) $
-      iterate finalizeStep (m', flashed)
+      iterate finalizeStep (m', initFlashed)
 
     finalizeStep :: (M, [Pt]) -> (M, [Pt])
-    finalizeStep (m, flashed) = upd m $ hit flashed
+    finalizeStep (m, flashed) = updWithHit m $ hit flashed
 
-    -- iterate upd (flashed, m)
-    -- 1: hit: flashed -> hit;
-    -- 2: upd: hit, m  -> flashed', m'
-    -- 3: if null flashed' then stop else go to 1
-    upd :: M -> [Hit] -> (M, [Pt])
-    upd m ht = foldl' updHit (m,[]) ht
-
-    updHit :: (M, [Pt]) -> Hit -> (M, [Pt])
-    updHit (m, fl) (p,n) = (m', if x then p:fl else fl)
+    updWithHit :: M -> [Hit] -> (M, [Pt])
+    updWithHit m ht = foldl' upd (m,[]) ht
       where
-        (x, m') = M.alterF
-          (\(Just (x,f)) -> if x + n > maxLevel
-            then (True, Just (0, f+1))
-            else (False, Just (x + n, f)))
-          p m
+      upd :: (M, [Pt]) -> Hit -> (M, [Pt])
+      upd (m, fl) (p,n) = (m', if x then p:fl else fl)
+        where
+          (x, m') = M.alterF
+            (\(Just (x,f)) -> if x + n > maxLevel
+              then (True, Just (0, f+1))
+              else (False, Just (x + n, f)))
+            p m
 
     hit :: [Pt] -> [Hit]
     hit flashed =
