@@ -26,7 +26,9 @@ type M = M.Map Pt Cell
 type Hit = (Pt, I)
 
 compute :: Int -> [Rec] -> Int
-compute 1 rs = trace ("init field:\n" ++ showMat "" rw cl initial) res
+compute n rs =
+  -- trace ("init field:\n" ++ showMat "" rw cl initial)
+  res n
   where
   rw = length rs
   cl = length (head rs)
@@ -34,22 +36,18 @@ compute 1 rs = trace ("init field:\n" ++ showMat "" rw cl initial) res
     [ ((i r,i c), rs !! r !! c) |
       r <- [0..rw-1], c<-[0..cl-1]]
   iters = 100
-  states :: [M]
-  states = iterate (step (i rw) (i cl)) initial
+  states = iterate (step (i rw) (i cl)) (initial, False)
   final = states !! iters
-  res = M.foldl' (\s (_, fl) -> s + i @_ @Int fl) (0::Int) $ final
-
-compute 2 rs = res
-  where
-  res = 0
+  res 1 = M.foldl' (\s (_, fl) -> s + i @_ @Int fl) (0::Int) . fst $ final
+  res 2 = length $ takeWhile (not . snd) states
 
 maxLevel :: Int8
 maxLevel = 9
 
-step :: I -> I -> M -> M
-step rw cl m = trace
-    ("step, result:\n" ++ showMat "" rw cl m'')
-    m''
+step :: I -> I -> (M, Bool) -> (M, Bool)
+step rw cl (m,_) =
+  -- trace ("step, result:\n" ++ showMat "" rw cl m'')
+    res
   where
     valid (r,c) = 0 <= r && r < rw && 0 <= c && c < cl
 
@@ -59,9 +57,9 @@ step rw cl m = trace
         else (fl, (e+1,f)))
       [] m
 
-    m'' = go (m', [], initFlashed)
+    res = go (m', [], initFlashed)
     go st@(_,fl,fl') = case finalizeStep st of
-      (m', [])  -> m'
+      (m', [])  -> (m', length (fl++fl') == i rw * i cl)
       (m', fl'') -> go (m', fl' ++ fl, fl'')
 
     finalizeStep :: (M, [Pt], [Pt]) -> (M, [Pt])
