@@ -1,4 +1,5 @@
 {-# language BangPatterns #-}
+{-# language TypeApplications #-}
 {-# language TupleSections #-}
 module Y2021.Day11 (solve) where
 
@@ -25,18 +26,18 @@ type M = M.Map Pt Cell
 type Hit = (Pt, I)
 
 compute :: Int -> [Rec] -> Int
-compute 1 rs = trace (intercalate "\n" $ map (showMat "" rw cl) states) res
+compute 1 rs = trace ("init field:\n" ++ showMat "" rw cl initial) res
   where
   rw = length rs
   cl = length (head rs)
   initial = M.fromList
-    [ ((fromIntegral r,fromIntegral c), rs !! r !! c) |
+    [ ((i r,i c), rs !! r !! c) |
       r <- [0..rw-1], c<-[0..cl-1]]
-  iters = 2
+  iters = 100
   states :: [M]
-  states = take iters $
-    iterate (step (fromIntegral rw) (fromIntegral cl)) initial
-  res = sum $ map (fromIntegral . M.foldl' (\s cell -> s + snd cell) 0) states
+  states = iterate (step (i rw) (i cl)) initial
+  final = states !! iters
+  res = M.foldl' (\s (_, fl) -> s + i @_ @Int fl) (0::Int) $ final
 
 compute 2 rs = res
   where
@@ -46,7 +47,9 @@ maxLevel :: Int8
 maxLevel = 9
 
 step :: I -> I -> M -> M
-step rw cl m = m''
+step rw cl m = trace
+    ("step, result:\n" ++ showMat "" rw cl m'')
+    m''
   where
     valid (r,c) = 0 <= r && r < rw && 0 <= c && c < cl
 
@@ -56,12 +59,13 @@ step rw cl m = m''
         else (fl, (e+1,f)))
       [] m
 
-    (_, (m'',_):_) =
-      break (not . null . snd) $
-      iterate finalizeStep (m', initFlashed)
+    m'' = go (m', [], initFlashed)
+    go st@(_,fl,fl') = case finalizeStep st of
+      (m', [])  -> m'
+      (m', fl'') -> go (m', fl' ++ fl, fl'')
 
-    finalizeStep :: (M, [Pt]) -> (M, [Pt])
-    finalizeStep (m, flashed) = updWithHit m $ hit flashed
+    finalizeStep :: (M, [Pt], [Pt]) -> (M, [Pt])
+    finalizeStep (m, fl, fl') = updWithHit m $ hit fl fl'
 
     updWithHit :: M -> [Hit] -> (M, [Pt])
     updWithHit m ht = foldl' upd (m,[]) ht
@@ -75,12 +79,13 @@ step rw cl m = m''
               else (False, Just (x + n, f)))
             p m
 
-    hit :: [Pt] -> [Hit]
-    hit flashed =
+    -- calculate who was hit by the flashed guys and how many times
+    hit :: [Pt] -> [Pt] -> [Hit]
+    hit fl fl' =
       map (head &&& (fromIntegral . length)) .
       groupSortOn id .
-      filter (\p -> valid p || notElem p flashed) $
-      concatMap nhood flashed
+      filter (\p -> valid p && p `notElem ` fl && p `notElem ` fl') $
+      concatMap nhood fl'
 
 
 nhood :: Pt -> [Pt]
@@ -97,3 +102,6 @@ parse = map readRec . lines
 
 readRec :: String -> Rec
 readRec = map ((,0) . read . pure)
+
+i :: (Integral a, Num b) => a -> b
+i = fromIntegral
