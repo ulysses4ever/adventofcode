@@ -2,6 +2,7 @@
 module Y2021.Day12 (solve) where
 
 import Aux
+import qualified Data.Map.Strict as M
 import Data.List
 import Data.List.Extra (nubOrd)
 import Data.Word8
@@ -22,13 +23,14 @@ compute :: Int -> [Rec] -> Int
 compute n g = trace (BC8.unpack $ B.intercalate "\n" res)
   (length res)
   where
+    adj' = M.fromList [(k, adj k g) | (v1,v2) <- g, k <- [v1,v2]]
     go :: [V] -> St' -> V -> [B.ByteString]
     go visited (S small s) v
       | v == "end" = [B.intercalate "," $ reverse (v:visited)]
       | v == "start" && not (null visited) = []
       | otherwise = concat (go (v:visited) <$> ss <*> as)
       where
-        as = adj v g \\ small
+        as = adj' M.! v \\ small
         ss
           | not (isSmall v) = [S small s]
           | otherwise = sts
