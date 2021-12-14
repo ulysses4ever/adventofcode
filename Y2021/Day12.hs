@@ -3,6 +3,7 @@ module Y2021.Day12 (solve) where
 
 import Aux
 import Data.List
+import Data.List.Extra (nubOrd)
 import Data.Char
 import Debug.Trace
 
@@ -13,26 +14,27 @@ solve n = print . compute n . parse
 type V = String
 type Rec = (V,V)
 type St = [Rec]
+data St' = S [V] Bool
 
 compute :: Int -> [Rec] -> Int
-compute 1 g = trace (intercalate "\n" res) (length res)
+compute n g = trace (intercalate "\n" res) (length res)
   where
-    go :: [V] -> [V] -> V -> [String]
-    go visited small v
+    go :: [V] -> St' -> V -> [String]
+    go visited (S small s) v
       | v == "end" = [intercalate "," $ reverse (v:visited)]
-      | otherwise = concatMap (go (v:visited) small') as
+      | v == "start" && not (null visited) = []
+      | otherwise = concat (go (v:visited) <$> ss <*> as)
       where
         as = adj v g \\ small
-        small'
-          | isSmall v = v:small
-          | otherwise = small
-    res = go [] [] "start"
-
-compute 2 rs = res
-  where
-  res = 0
-
-compute _ rs = error "unknown part"
+        ss
+          | not (isSmall v) = [S small s]
+          | otherwise = sts
+        sts
+          | not s && n == 2 = [st', st'']
+          | otherwise = [st'']
+        st' = S small True
+        st'' = S (v:small) s
+    res = nubOrd $ go [] (S [] False) "start"
 
 isSmall :: V -> Bool
 isSmall = all isLower
