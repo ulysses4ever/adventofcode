@@ -3,6 +3,7 @@ module Y2021.Day12 (solve) where
 
 import Aux
 import Data.List
+import Data.Char
 import Debug.Trace
 
 -- first arg is Part #
@@ -14,19 +15,27 @@ type Rec = (V,V)
 type St = [Rec]
 
 compute :: Int -> [Rec] -> Int
-compute 1 g = traceShow g res
+compute 1 g = trace (intercalate "\n" res) (length res)
   where
-    go :: [V] -> V -> Int
-    go visited v
-      | v == "end" = 1
-      | otherwise = sum $ map (go (v:visited)) as
+    go :: [V] -> [V] -> V -> [String]
+    go visited small v
+      | v == "end" = [intercalate "," $ reverse (v:visited)]
+      | otherwise = concatMap (go (v:visited) small') as
       where
-        as = adj v g \\ visited
-    res = go [] "start"
+        as = adj v g \\ small
+        small'
+          | isSmall v = v:small
+          | otherwise = small
+    res = go [] [] "start"
 
 compute 2 rs = res
   where
   res = 0
+
+compute _ rs = error "unknown part"
+
+isSmall :: V -> Bool
+isSmall = all isLower
 
 adj :: V -> St -> [V]
 adj v = concatMap pick
