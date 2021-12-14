@@ -7,7 +7,7 @@ import Aux
 import Data.List
 import Data.Either
 import Debug.Trace
-import Data.List.Extra (split, chunksOf)
+import Data.List.Extra (chunksOf)
 
 import qualified Data.IntMap.Strict as M
 import Data.IntMap.Strict (IntMap)

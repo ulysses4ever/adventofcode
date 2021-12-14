@@ -12,7 +12,7 @@ import Data.Traversable
 import Control.Monad
 import Debug.Trace
 
-import Data.List.Extra (split, chunksOf)
+import Data.List.Extra (chunksOf)
 import Data.Tuple.Extra (dupe)
 
 import qualified Data.Vector.Unboxed as V

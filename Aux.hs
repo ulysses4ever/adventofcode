@@ -1,7 +1,7 @@
 module Aux where
 
 import qualified Data.Map.Strict as M
-import Data.List.Extra (split)
+import qualified Data.List.Extra as E (split)
 import Data.List
 import Data.Int
 
@@ -10,6 +10,9 @@ readIntsSep c = map read . split (== c)
 
 sign :: Int -> Int
 sign = signum
+
+split :: (a -> Bool) -> [a] -> [[a]]
+split = E.split
 
 nats01 :: Integral i => i -> [i]
 nats01 n = [0..n-1]
