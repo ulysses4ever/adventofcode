@@ -65,13 +65,17 @@ compute n (m,cl) = res
     dist 1 v = m V.! v
     dist 2 v = n
       where
-        r = v `div` cl'
-        c = (v `mod` cl') `div` cl
-        base = m V.! (v `mod` cl)
-        n = (base - 1 + c + r) `div` 8
+        base = m V.! (v `mod` (V.length m))
+        (r,c) = linToDim cl' cl v
+        n = (base - 1 + c + r) `mod` 9 + 1
 
     d = dist n
     nhood' = nhood mx cl'
+
+linToDim cl' cl v = (r,c)
+    where
+      r = v `div` cl'
+      c = (v `mod` cl') `div` cl
 
 nhood max cl u
   | u `mod` cl == 0 = filter ((/= cl - 1) . (`mod` cl)) full
