@@ -1,1 +1,1 @@
-extra vector vector-algorithms relude hmatrix MemoTrie word8
+extra vector vector-algorithms relude hmatrix MemoTrie word8 psqueues
