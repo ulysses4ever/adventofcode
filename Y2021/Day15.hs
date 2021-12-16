@@ -4,6 +4,7 @@ module Y2021.Day15 (solve) where
 
 import Aux
 import Data.List
+import Data.Maybe
 import Debug.Trace
 import qualified Data.Vector.Primitive as V
 import qualified Data.IntPSQ as Q
@@ -20,31 +21,64 @@ type Q = Q.IntPSQ Dist Idx
 data St = S
 
 compute :: Int -> M -> Int
-compute n (v,cl) = res
+compute 1 (m,cl) = res
   where
-    target = V.length v
+    target = V.length m - 1
     key (k,_,_) = k
     prio (_,p,_) = p
+
     q :: Q
-    q = Q.fromList ((,maxBound, -1) <$> [0..V.length v])
+    q = Q.insert 0 0 (-1) $
+      Q.fromList ((,maxBound, -1) <$> [1..V.length m - 1])
+
     go :: Q -> Int
     go q
-      | key $ Q.findMin q == target = prio $ Q.findMin q
+      | (key . findMin $ q) == target
+          = prio $ findMin q
       | otherwise = go $ step q
-    res = 0
+    res = go q
 
     step :: Q -> Q
-    step q = q''
+    step q = -- trace ("open: " ++ show v ++ " whith dist: " ++ show d)
+      q''
       where
-        Just (v, d, p, q') = Q.minView q
-        ns = filter (Q.member q') $ nhood v
-        q'' = foldl' (updFrom p) q' ns
-    updFrom :: Dist -> Q -> Idx -> Q
-    updFrom toCur q v
-      | toCur + dist v < fst . Q.lookup v $ q = undefined
+        Just (v, d, prev, q') = Q.minView q
+        ns = filter (`Q.member` q') $ nhood' v
+        q'' = foldl' (updFrom v d) q' ns
+
+    updFrom :: Idx -> Dist -> Q -> Idx -> Q
+    updFrom cur toCur q v
+      | alt < (fst . lookupQ v $ q)
+          = -- trace (unwords ["updFrom: alt is", show alt, ", cur is", show cur, ", to is", show v]) $
+            Q.insert v alt cur q
+      | otherwise = q
+      where
+        alt = toCur + dist v
+
+    dist :: Idx -> Dist
+    dist v = m V.! v
+
+    nhood' = nhood (V.length m) cl
+
+nhood max cl u
+  | u `mod` cl == 0 = filter ((/= cl - 1) . (`mod` cl)) full
+  | u `mod` cl == cl - 1 = filter ((/= 0) . (`mod` cl)) full
+  | otherwise = full
+  where
+    full = [u' | du <- [-1, 1, negate cl, cl],
+            let u' = u + du,
+            u' >= 0,
+            u' < max]
+
+findMin :: Q -> (Idx, Dist, Idx)
+findMin = fromJust . Q.findMin
+
+lookupQ :: Idx -> Q -> (Dist, Idx)
+lookupQ v = fromJust . Q.lookup v
 
 parse :: String -> M
-parse i = (v,cl)
+parse i = -- trace (unwords ["parsed matrix with ", show cl, " columns and ", show $ V.length v, "elements; contents: ", show $ V.toList v])
+  (v,cl)
   where
     ls = lines i
     cl = length (head ls)
