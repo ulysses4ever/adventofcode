@@ -21,15 +21,21 @@ type Q = Q.IntPSQ Dist Idx
 data St = S
 
 compute :: Int -> M -> Int
-compute 1 (m,cl) = res
+compute n (m,cl) = res
   where
-    target = V.length m - 1
+    max 1 = V.length m
+    max 2 = 25 * V.length m
+    mx = max n
+    cols 1 = cl
+    cols 2 = 5 * cl
+    cl' = cols n
+    target = mx - 1
     key (k,_,_) = k
     prio (_,p,_) = p
 
     q :: Q
     q = Q.insert 0 0 (-1) $
-      Q.fromList ((,maxBound, -1) <$> [1..V.length m - 1])
+      Q.fromList ((,maxBound, -1) <$> [1..mx - 1])
 
     go :: Q -> Int
     go q
@@ -53,12 +59,19 @@ compute 1 (m,cl) = res
             Q.insert v alt cur q
       | otherwise = q
       where
-        alt = toCur + dist v
+        alt = toCur + d v
 
-    dist :: Idx -> Dist
-    dist v = m V.! v
+    dist :: Int -> Idx -> Dist
+    dist 1 v = m V.! v
+    dist 2 v = n
+      where
+        r = v `div` cl'
+        c = (v `mod` cl') `div` cl
+        base = m V.! (v `mod` cl)
+        n = (base - 1 + c + r) `div` 8
 
-    nhood' = nhood (V.length m) cl
+    d = dist n
+    nhood' = nhood mx cl'
 
 nhood max cl u
   | u `mod` cl == 0 = filter ((/= cl - 1) . (`mod` cl)) full
