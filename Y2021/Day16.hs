@@ -13,6 +13,7 @@ import Numeric (readHex)
 import GHC.Show (intToDigit)
 import Numeric.Extra (showIntAtBase)
 
+import Control.Monad (guard)
 import Control.Monad.Trans.State.Strict (StateT, runStateT)
 import Control.Monad.Trans.Except (Except, runExcept)
 
@@ -97,9 +98,12 @@ getBit :: St B
 getBit = getNBits 1 <&> head
 
 getNBits :: Int -> St [B]
-getNBits n = state (\(bs, cnt) ->
+getNBits n = do
+  (bs, cnt) <- get
+  guard $ length bs >= n
   let (res, bs') = splitAt n bs
-  in (res, (bs', cnt + n)))
+  put (bs', cnt + n)
+  pure res
 
 getCnt :: St Int
 getCnt = snd <$> get
@@ -131,14 +135,3 @@ bitsToInt = foldr (\b r -> bitToInt b + r * 2) 0 . reverse
 -- in base since GHC 9.2 but relude fails to compile with it
 showBin :: (Integral a, Show a) => a -> String
 showBin n = showIntAtBase 2 intToDigit n ""
-
-{-
-Example GHCi session
-
-λ> import  Control.Monad.Trans.State.Strict
-λ> runStateT getPacket (parse "D2FE28")
-ExceptT (Identity (Right (P {ver = 6, pload = Lit 2021},[O,O,O])))
-
-ExceptT (Identity (Right (P {ver = 6, pload = Lit 2021},([O,O,O],21))))
-
--}
