@@ -6,19 +6,19 @@ import Aux ()
 import Data.List as L ( concatMap, head )
 import qualified Data.List.NonEmpty as NE
 import Data.List.NonEmpty (NonEmpty, NonEmpty((:|)))
+import Data.Either
 import Data.Functor
 import Debug.Trace
 import Numeric (readHex)
 import GHC.Show (intToDigit)
 import Numeric.Extra (showIntAtBase)
 
-import Control.Monad.Trans.State.Strict (StateT)
-import Control.Monad.Trans.Except (Except)
+import Control.Monad.Trans.State.Strict (StateT, runStateT)
+import Control.Monad.Trans.Except (Except, runExcept)
 
 import Control.Monad.State.Class
 import Control.Monad.Error.Class
 import Control.Applicative (Alternative(many))
-import System.Directory (setPermissions)
 
 
 -- first arg is Part #
@@ -27,7 +27,8 @@ solve n = print . compute n . parse
 
 data B = I | O deriving (Eq, Show)
 type Rec = B
-type St a = StateT [B] (Except String) a
+type T = ([B], Int) -- state
+type St a = StateT T (Except String) a -- the monad
 
 type Ver = Int
 type TId = Int
@@ -41,13 +42,27 @@ data L -- payload
   deriving Show
 
 compute :: Int -> [Rec] -> Int
-compute 1 rs = res
+compute 1 bs = traceShow ps res
   where
-  res = 0
+    initial = (bs, 0)
+    ps = run initial $ many getOuterPacket
+    res = 0
 
 compute 2 rs = res
   where
   res = 0
+
+run :: T -> St a -> a
+run t a = fst . fromRight undefined . runExcept $ runStateT a t
+
+getOuterPacket :: St P
+getOuterPacket = getPacket <* pad
+
+pad :: St ()
+pad = do
+  c <- getCnt
+  let p = c `mod` 4
+  void $ getNBits (4 - p)
 
 getPacket :: St P
 getPacket = P <$> getVer <*> getPload
@@ -82,7 +97,12 @@ getBit :: St B
 getBit = getNBits 1 <&> head
 
 getNBits :: Int -> St [B]
-getNBits n = state (splitAt n)
+getNBits n = state (\(bs, cnt) ->
+  let (res, bs') = splitAt n bs
+  in (res, (bs', cnt + n)))
+
+getCnt :: St Int
+getCnt = snd <$> get
 
 parse :: String -> [Rec]
 parse = L.concatMap readRec
@@ -118,5 +138,7 @@ Example GHCi session
 λ> import  Control.Monad.Trans.State.Strict
 λ> runStateT getPacket (parse "D2FE28")
 ExceptT (Identity (Right (P {ver = 6, pload = Lit 2021},[O,O,O])))
+
+ExceptT (Identity (Right (P {ver = 6, pload = Lit 2021},([O,O,O],21))))
 
 -}
