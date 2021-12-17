@@ -1,5 +1,6 @@
-{-# language BangPatterns #-}
-{-# language LambdaCase   #-}
+{-# language BangPatterns     #-}
+{-# language FlexibleContexts #-}
+{-# language LambdaCase       #-}
 module Y2021.Day16 (solve) where
 
 import Aux ()
@@ -13,7 +14,8 @@ import Numeric (readHex)
 import GHC.Show (intToDigit)
 import Numeric.Extra (showIntAtBase)
 
-import Control.Monad (guard)
+import Control.Arrow
+import Control.Monad (guard, replicateM)
 import Control.Monad.Trans.State.Strict (StateT, runStateT)
 import Control.Monad.Trans.Except (Except, runExcept)
 
@@ -45,8 +47,7 @@ data L -- payload
 compute :: Int -> [Rec] -> Int
 compute 1 bs = traceShow ps res
   where
-    initial = (bs, 0)
-    ps = run initial $ many getOuterPacket
+    (ps, _cnt) = run bs $ many getOuterPacket
     res = sum $ map sumVer ps
 
 compute 2 rs = res
@@ -57,8 +58,8 @@ sumVer :: P -> Int
 sumVer (P v (Lit _)) = v
 sumVer (P v (Op _ ps)) = v + (sum $ map sumVer ps)
 
-run :: T -> St a -> a
-run t a = fst . fromRight undefined . runExcept $ runStateT a t
+run :: [B] -> St a -> (a, Int)
+run bs a = second snd . fromRight undefined . runExcept $ runStateT a (bs, 0)
 
 getOuterPacket :: St P
 getOuterPacket = getPacket <* pad
@@ -73,10 +74,20 @@ getPacket :: St P
 getPacket = P <$> getVer <*> getPload
 
 getPload :: St L
-getPload = getTId >>=
-  \case
+getPload = getTId >>= \case
     4   -> Lit `fmap` getLiteral
-    tid -> Op tid `fmap` many getPacket
+    tid -> Op tid `fmap` getSubpackets
+
+getSubpackets :: St [P]
+getSubpackets = getBit >>= \case
+    O -> getNBitInt 15 >>= getNBits >>= subpackets
+    I -> getNBitInt 11 >>= flip replicateM getPacket
+
+  where
+    subpackets bs = do
+      let (ps, cnt) = run bs (many getPacket)
+      modify (\(bs, cnt') -> (bs, cnt+cnt'))
+      pure ps
 
 getLiteral :: St Integer
 getLiteral = bitsToInt <$> go []
@@ -113,10 +124,11 @@ getCnt :: St Int
 getCnt = snd <$> get
 
 parse :: String -> [Rec]
-parse = L.concatMap readRec
+parse = L.concatMap readRec . filter (/= '\n')
 
 readRec :: Char -> [Rec]
-readRec c = bs
+readRec c = -- trace ("readRec of " ++ show c)
+  bs
   where
     bss = showBin . fst . L.head . readHex . pure $ c
     bs  = map readBit $

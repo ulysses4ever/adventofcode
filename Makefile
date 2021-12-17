@@ -12,4 +12,4 @@ inp-sample-%:
 inp-full-%:
 	cp Y2021/input/day-$*.full Y2021/input/day-$*.txt
 shell:
-	nix-shell -p "haskellPackages.ghcWithPackages (p: with p; [$(DEPS)])" -p blas lapack
+	nix-shell -p blas lapack
