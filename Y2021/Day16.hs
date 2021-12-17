@@ -47,11 +47,15 @@ compute 1 bs = traceShow ps res
   where
     initial = (bs, 0)
     ps = run initial $ many getOuterPacket
-    res = 0
+    res = sum $ map sumVer ps
 
 compute 2 rs = res
   where
   res = 0
+
+sumVer :: P -> Int
+sumVer (P v (Lit _)) = v
+sumVer (P v (Op _ ps)) = v + (sum $ map sumVer ps)
 
 run :: T -> St a -> a
 run t a = fst . fromRight undefined . runExcept $ runStateT a t
