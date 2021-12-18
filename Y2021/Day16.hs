@@ -1,13 +1,9 @@
 {-# language BangPatterns     #-}
 {-# language FlexibleContexts #-}
 {-# language LambdaCase       #-}
-module Y2021.Day16 (solve) where
+module Y2021.Day16 where
 
-import Aux ()
 import Data.List as L ( concatMap, head )
-import qualified Data.List.NonEmpty as NE
-import Data.List.NonEmpty (NonEmpty, NonEmpty((:|)))
-import Data.Either
 import Data.Functor
 import Debug.Trace
 import Numeric (readHex)
@@ -15,12 +11,11 @@ import GHC.Show (intToDigit)
 import Numeric.Extra (showIntAtBase)
 
 import Control.Arrow
-import Control.Monad (guard, replicateM)
+import Control.Monad (guard, replicateM, when)
 import Control.Monad.Trans.State.Strict (StateT, runStateT)
 import Control.Monad.Trans.Except (Except, runExcept)
 
 import Control.Monad.State.Class
-import Control.Monad.Error.Class
 import Control.Applicative (Alternative(many))
 
 
@@ -45,10 +40,11 @@ data L -- payload
   deriving Show
 
 compute :: Int -> [Rec] -> Int
-compute 1 bs = traceShow ps res
+compute 1 bs = -- traceShow p
+  res
   where
-    (ps, _cnt) = run bs $ many getOuterPacket
-    res = sum $ map sumVer ps
+    (p, _bs_and_cnt) = run getPacket bs
+    res = sumVer p
 
 compute 2 rs = res
   where
@@ -58,8 +54,10 @@ sumVer :: P -> Int
 sumVer (P v (Lit _)) = v
 sumVer (P v (Op _ ps)) = v + (sum $ map sumVer ps)
 
-run :: [B] -> St a -> (a, Int)
-run bs a = second snd . fromRight undefined . runExcept $ runStateT a (bs, 0)
+run :: St a -> [B] -> (a, ([B], Int))
+run a bs =
+  either (\s -> error $ "run: " ++ s) id .
+  runExcept $ runStateT a (bs, 0)
 
 getOuterPacket :: St P
 getOuterPacket = getPacket <* pad
@@ -68,7 +66,8 @@ pad :: St ()
 pad = do
   c <- getCnt
   let p = c `mod` 4
-  void $ getNBits (4 - p)
+  when (p /= 0) .
+    void $ many getBit
 
 getPacket :: St P
 getPacket = P <$> getVer <*> getPload
@@ -85,8 +84,9 @@ getSubpackets = getBit >>= \case
 
   where
     subpackets bs = do
-      let (ps, cnt) = run bs (many getPacket)
-      modify (\(bs, cnt') -> (bs, cnt+cnt'))
+      let (ps, (bs', cnt')) = run (many getPacket) bs
+      guard $ null bs'
+      modify (\(bs, cnt) -> (bs, cnt+cnt'))
       pure ps
 
 getLiteral :: St Integer
@@ -127,7 +127,7 @@ parse :: String -> [Rec]
 parse = L.concatMap readRec . filter (/= '\n')
 
 readRec :: Char -> [Rec]
-readRec c = -- trace ("readRec of " ++ show c)
+readRec c =
   bs
   where
     bss = showBin . fst . L.head . readHex . pure $ c
