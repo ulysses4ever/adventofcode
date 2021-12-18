@@ -1,10 +1,10 @@
-{-# language BangPatterns     #-}
 {-# language FlexibleContexts #-}
 {-# language LambdaCase       #-}
 module Y2021.Day16 where
 
 import Data.List as L ( concatMap, head )
 import Data.Functor
+import Data.Bool
 import Debug.Trace
 import Numeric (readHex)
 import GHC.Show (intToDigit)
@@ -39,16 +39,28 @@ data L -- payload
   | Op TId [P]
   deriving Show
 
-compute :: Int -> [Rec] -> Int
-compute 1 bs = -- traceShow p
-  res
+compute :: Int -> [Rec] -> Integer
+compute n bs = -- traceShow p
+  res n
   where
     (p, _bs_and_cnt) = run getPacket bs
-    res = sumVer p
+    res 1 = fromIntegral $ sumVer p
+    res 2 = eval p
 
-compute 2 rs = res
-  where
-  res = 0
+eval :: P -> Integer
+eval = \case
+  P _ (Lit n)    -> n
+  P _ (Op op ps) -> case op of
+    0 -> sum es
+    1 -> product es
+    2 -> minimum es
+    3 -> maximum es
+    5 -> bool 0 1 (e1 > e2)
+    6 -> bool 0 1 (e1 < e2)
+    7 -> bool 0 1 (e1 == e2)
+    where
+      es = map eval ps
+      [e1, e2] = es
 
 sumVer :: P -> Int
 sumVer (P v (Lit _)) = v
@@ -58,16 +70,6 @@ run :: St a -> [B] -> (a, ([B], Int))
 run a bs =
   either (\s -> error $ "run: " ++ s) id .
   runExcept $ runStateT a (bs, 0)
-
-getOuterPacket :: St P
-getOuterPacket = getPacket <* pad
-
-pad :: St ()
-pad = do
-  c <- getCnt
-  let p = c `mod` 4
-  when (p /= 0) .
-    void $ many getBit
 
 getPacket :: St P
 getPacket = P <$> getVer <*> getPload
