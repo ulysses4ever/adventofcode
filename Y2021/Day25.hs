@@ -4,6 +4,7 @@ module Y2021.Day25 (solve) where
 
 import Aux
 import Data.List
+import Data.Maybe
 import Debug.Trace
 import qualified Data.IntMap.Strict as I
 
@@ -14,22 +15,29 @@ solve n = print . compute n . parse
 data C = E | S -- east or south
   deriving Eq
 type M = I.IntMap C
-data St = St M Int Int
-  deriving Show
+data St = St !M !Int !Int
 
 compute :: Int -> St -> Int
-compute 1 rs = res
+compute 1 rs = -- traceShow stepsProper
+    res
   where
-  res = 0
+    steps = iterate (>>= step) (Just rs)
+    stepsProper = takeWhile isJust steps
+    res = length stepsProper
 
 compute 2 rs = res
   where
   res = 0
 
 step :: St -> Maybe St
-step (St m rw cl) = Just $ St m' rw cl
+step (St m rw cl) =
+    if changed'
+    then Just $ St m'' rw cl
+    else Nothing
   where
     (_, m', changed) = I.foldlWithKey' (upd E) (m, I.empty, False) m
+    (_, m'', changed') = I.foldlWithKey' (upd S) (m', I.empty, changed) m'
+
     upd c s@(m, m', ch) n c'
       | c == c' =
         if nxt `I.member` m
@@ -53,7 +61,9 @@ parse s = St m rw cl
     st@(m,rw,cl) = readIMat (/= '.') (\case '>' -> E; 'v' -> S) s
     res = St m rw cl
 
-showSt (St m rw cl) = showIMat "" "." (m,rw,cl)
+showSt (St m rw cl) = "\n" ++ showIMat "" "." (m,rw,cl)
+instance Show St where
+  show = showSt
 
 instance Show C where
   show E = ">"
