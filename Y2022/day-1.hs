@@ -3,11 +3,11 @@
 build-depends: base, extra, flow
 -}
 
-import Flow
+import Flow ((.>))
 import Data.List.Extra (split)
 import Data.List
 
-main  = print . solve =<< getContents
+main  = getContents >>= solve .> print
 
 parse :: String -> [[Int]]
 parse =  lines .> split (== "") .> map (map read)
