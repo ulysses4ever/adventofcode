@@ -17,6 +17,7 @@ data C = E | S -- east or south
 type M = I.IntMap C
 data St = St !M !Int !Int
 
+-- ^ main worker function
 compute :: Int -> St -> Int
 compute 1 rs = -- traceShow stepsProper
     res
