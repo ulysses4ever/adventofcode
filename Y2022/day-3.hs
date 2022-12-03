@@ -4,22 +4,28 @@ build-depends: base, extra, flow
 -}
 {-# language MultiWayIf #-}
 
-import Flow ((.>))
+import Flow ((.>), (|>))
 import Data.List
+import Data.List.Extra (chunksOf)
 import Data.Char
 
 main  = getContents >>= solve .> print
 
 solve :: String -> [Int]
-solve input = (part <$> [1,2]) <*> (pure $ parse input)
+solve input = [ input |> parse1 |> part1
+              , input |> parse2 |> part2
+              ]
 
 type Sack = (String, String)
 
-parse :: String -> [Sack]
-parse =  lines .> map (flip splitAt <*> (length .> (`div` 2)))
+parse1 :: String -> [Sack]
+parse1 =  lines .> map (flip splitAt <*> (length .> (`div` 2)))
 
-part :: Int -> [Sack] -> Int
-part n = map (score . head . uncurry intersect) .> sum
+parse2 = lines
+
+part1 = map (uncurry intersect .> head .> score) .> sum
+
+part2 = chunksOf 3 .> map (foldl1' intersect .> head .> score) .> sum
 
 score t = ord t + 1 + if
    | isLower t -> negate $ ord 'a'
