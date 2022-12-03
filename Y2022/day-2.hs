@@ -1,11 +1,10 @@
 #!/usr/bin/env cabal
 {- cabal:
-build-depends: base, extra, flow
+build-depends: base, flow
 -}
 {-# language LambdaCase #-}
 
 import Flow ((.>))
-import Data.List.Extra (split)
 import Data.List
 
 main  = getContents >>= solve .> print
