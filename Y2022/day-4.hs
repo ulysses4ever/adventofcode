@@ -29,8 +29,10 @@ data Asgn = A Seg Seg
 asgnP :: Parser Asgn
 asgnP = A <$> (segP <* char ',') <*> segP
 
-part n = filter contained .> length
+part n = filter (overlap n) .> length
 
-contained (A (S l1 r1) (S l2 r2)) =
+overlap 1 (A (S l1 r1) (S l2 r2)) =
   l1 <= l2 && r2 <= r1 ||
   l2 <= l1 && r1 <= r2
+overlap 2 (A (S l1 r1) (S l2 r2)) =
+  l2 <= r1 && l1 <= r2
