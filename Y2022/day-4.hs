@@ -12,10 +12,8 @@ import Data.Maybe
 
 main  = getContents >>= solve .> print
 
---solve :: String -> [Int]
 solve input = (part <$> [1,2]) <*> (pure $ parse input)
 
---parse :: String -> [String]
 parse =  lines .> map (fromJust . parseMaybe asgnP)
 
 type Parser = Parsec () String
