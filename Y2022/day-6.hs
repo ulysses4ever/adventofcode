@@ -9,11 +9,9 @@ import Data.List
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part n = id -- map (score n) .> sum
-
--- Read one line of problem's input into something more structured
--- parseLine :: String -> ???
-parseLine = id
+part p = tails .> map (take n .> nub) .> takeWhile (length .> (< n)) .> length .> (+ n)
+  where
+  n = if p == 1 then 4 else 14
 
 {--------------------------------------------------------
 --
@@ -31,4 +29,4 @@ solve input = (part <$> [1,2]) <*> (pure $ parse input)
 
 -- Turn problem's full text into something more structured
 -- parse :: String -> ???
-parse =  lines .> map parseLine
+parse =  id
