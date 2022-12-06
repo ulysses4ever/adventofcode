@@ -10,14 +10,13 @@ import Data.List
 import Data.List.Extra (replace)
 import Data.List.Index (setAt)
 import Data.Char
-import Debug.Trace
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
 part n (state, moves) =
-  map head $ foldl' makeMove state moves
+  map head $ foldl' (makeMove n) state moves
 
-makeMove s [n, from, to] =
+makeMove p s [n, from, to] =
   setAt to' t' (setAt from' f' s)
   where
     from' = from - 1
@@ -25,7 +24,7 @@ makeMove s [n, from, to] =
     f = s !! from'
     t = s !! to'
     (m, f') = splitAt n f
-    t' = reverse m ++ t
+    t' = (if p == 1 then reverse m else m) ++ t
 
 -- Turn problem's full text into something more structured
 parse i = (state3, moves2)
@@ -52,4 +51,4 @@ main  = getContents >>= solve .> print
 -- Solve both parts and return a list with two elements -- the results
 -- Input: problem's full text
 --solve :: String -> [Int]
-solve input = (part <$> [1]) <*> (pure $ parse input)
+solve input = (part <$> [1,2]) <*> (pure $ parse input)
