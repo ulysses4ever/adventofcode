@@ -6,47 +6,50 @@ build-depends: base, flow, extra
 
 import Flow ((.>), (|>))
 import Data.List
-import Data.List.Extra (nubOrdOn)
 import Data.Maybe
+import Debug.Trace
 
 type Name = String
 type File = (Name, Int)
 type Dir  = [Either Name File] -- either name of a subdir a file
-type Tree = [(Name, Dir)] -- map name of a dir to its description
-type State = (Tree, Dir, Name)
+type Path = [Name]
+type Tree = [(Path, Dir)] -- map name of a dir to its description
+type State = (Tree, Dir, Path)
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
 part n i = map (size tree) dirs |> filter (<= 100000) |> sum
   where
-    tree' = buildTree i
-    tree  = nubOrdOn fst tree'
+    tree = buildTree i
     dirs = map fst tree
 
-size :: Tree -> Name -> Int
-size tree name = lookup name tree |> fromJust |> map getSize |> sum
+size :: Tree -> Path -> Int
+size tree path = lookup path tree
+  |> fromMaybe (trace ("Unknown path: " ++ (intercalate "/" (reverse path))) [])
+  |> map getSize
+  |> sum
   where
     getSize = \case
       (Right (fname, fsize)) -> fsize
-      (Left dname) -> size tree dname
+      (Left dname) -> size tree (dname : path)
 
-buildTree = tail .> foldl' collect ([], [], "/") .> complete
+buildTree = tail .> foldl' collect ([], [], ["/"]) .> complete
   where
     complete :: State -> Tree
-    complete (tree, dir, name) = if null dir then tree else (name, dir) : tree
+    complete (tree, dir, path) = if null dir then tree else (path, dir) : tree
 
     collect :: State -> [String] -> State
-    collect s@(tree, dir, nameCurrent) = \case
+    collect s@(tree, dir, path) = \case
       ["$", "ls"] -> s
 
-      ["$", "cd", ".."] -> s
+      ["$", "cd", ".."] -> (complete s, [], tail path)
 
       ["$", "cd", name] ->
-        (complete s, [], name)
+        (complete s, [], name:path)
 
-      ["dir", name] -> (tree, (Left name) : dir, nameCurrent)
+      ["dir", name] -> (tree, (Left name) : dir, path)
 
-      [size, name] -> (tree, (Right (name, read size)) : dir, nameCurrent)
+      [size, name] -> (tree, (Right (name, read size)) : dir, path)
 
 -- Read one line of problem's input into something more structured
 -- parseLine :: String -> ???
