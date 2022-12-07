@@ -18,10 +18,20 @@ type State = (Tree, Dir, Path)
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part n i = map (size tree) dirs |> filter (<= 100000) |> sum
+part n i = res n
   where
+    res 1 = sizes |> filter (<= 100000) |> sum
+    res 2 = head $ dropWhile (< need) $ sort sizes
+
+    sizes = map (size tree) dirs
     tree = buildTree i
     dirs = map fst tree
+
+    use = last sizes
+    req = 30000000
+    ava = 70000000
+    fre = ava - use
+    need = req - fre
 
 size :: Tree -> Path -> Int
 size tree path = lookup path tree
@@ -67,7 +77,7 @@ main  = interact (solve .> show)
 
 -- Solve both parts and return a list with two elements -- the results
 -- Input: problem's full text
-solve input = (part <$> [1]) <*> (pure $ parse input)
+solve input = (part <$> [1,2]) <*> (pure $ parse input)
 
 -- Turn problem's full text into something more structured
 -- parse :: String -> ???
