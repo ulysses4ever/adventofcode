@@ -4,7 +4,7 @@ build-depends: base, flow, extra
 -}
 {-# language LambdaCase #-}
 
-import Flow ((.>))
+import Flow ((.>), (|>))
 import Data.List
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
