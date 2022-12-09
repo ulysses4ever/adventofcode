@@ -12,18 +12,39 @@ import Debug.Trace
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part n i = length .
-  sortOn fst . nubOrd $ (concatMap pp j) ++ (concatMap pp (transpose j))
+part n i = res n
   where
+  res 1 = length visible
+  res 2 = zipWith (*) (getScores j) (getScores j') |> maximum
+
+  visible = nubOrd . map fst $
+    concatMap visibleOnLine j ++ concatMap visibleOnLine j'
+
+  getScores inp = concatMap scenicScoresOnLine inp  |> sortOn fst |> map snd
+
+  -- put unique index on every cell
   w = length $ head i
   j = concat i |> zip [1..] |> chunksOf w
+  j' = transpose j
 
-p = snd . foldl'
-  (\ s@(mx, ps) p@(_, a) -> traceShow (s,p) $
-    if mx < a then (a, p:ps) else s)
-  (-1, [])
+visibleOnLine l = visibleOneDirection l ++ visibleOneDirection (reverse l)
+  where
+  visibleOneDirection = snd . foldl'
+    (\ s@(mx, ps) p@(_, a) ->
+      if mx < a then (a, p:ps) else s)
+    (-1, [])
 
-pp l = p l ++ p (reverse l)
+scenicScoresOnLine = go ([], [])
+  where
+  go (past, scores) [] = scores
+  go (past, scores) (p@(i, x) : next) = go (p:past, s:scores) next
+    where
+    s = (i, getScoreOneDirection x past * getScoreOneDirection x next)
+
+  getScoreOneDirection x l = case span (< x) (map snd l) of
+    (ps, []) -> length ps
+    (ps,  _) -> length ps + 1
+
 
 -- Read one line of problem's input into something more structured
 parseLine :: String -> [Int8]
@@ -41,7 +62,7 @@ main  = interact (solve .> show)
 
 -- Solve both parts and return a list with two elements -- the results
 -- Input: problem's full text
-solve input = (part <$> [1]) <*> (pure $ parse input)
+solve input = (part <$> [1,2]) <*> pure (parse input)
 
 -- Turn problem's full text into something more structured
 -- parse :: String -> ???
