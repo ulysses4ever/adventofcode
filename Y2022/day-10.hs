@@ -6,26 +6,33 @@ build-depends: base, flow, extra
 
 import Flow ((.>), (|>))
 import Data.List
+import Data.List.Extra
 
 data Cmd = A Int | N
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
--- part :: Int -> ??? -> Int
-part n i = res
+part n i = res n
   where
-    history = foldl' f (1, [0]) i |> (\(x,hist) -> reverse $ x:hist)
     interestingCycles = [20,60,100,140,180,220]
-    res = map (\c -> c * history !! c) interestingCycles |> sum
+    history = foldl' f (1, []) i |> snd |> reverse
     f (x, hist) = \case
       A i -> (x + i, x:x:hist)
       N   -> (x, x:hist)
 
+    res 1 = map (\c -> c * history !! (c-1)) interestingCycles
+      |> sum
+      |> show
+    res 2 = zip (cycle [0..39]) history
+      |> map (\(c, s) ->
+        if abs (c - s) < 2 then '#' else '.')
+      |> chunksOf 40
+      |> unlines
+
 -- Read one line of problem's input into something more structured
--- parseLine :: String -> ???
-parseLine = words .> p
-  where
-    p [a, i] = A $ read i
-    p [n]    = N
+parseLine :: String -> Cmd
+parseLine = words .> \case
+    [a, i] -> A $ read i
+    [n]    -> N
 
 {--------------------------------------------------------
 --
@@ -35,7 +42,7 @@ parseLine = words .> p
 --------------------------------------------------------}
 
 -- Entry point: read stdin, solve the problem and print the result
-main  = interact (solve .> show)
+main  = getContents >>= (solve .> mapM_ putStrLn)
 
 -- Solve both parts and return a list with two elements -- the results
 -- Input: problem's full text
