@@ -21,7 +21,7 @@ move (h, t, ps) (m, n) = (h', t', ps)
   h' = h <+> (n <.> m)
   j = rot ma <&> d
   tlen = n - 1 + (d <#> m)
-  t' = t <+> j <+> (tlen <.> m)
+  t' = t <+> (min tlen 1 <.> j) <+> (tlen <.> m)
 
 -- Read one line of problem's input into something more structured
 -- parseLine :: String -> []
