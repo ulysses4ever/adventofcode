@@ -14,24 +14,23 @@ import qualified Data.Sequence as S
 import Data.Sequence (Seq(..))
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
-part :: Int -> [Monkey] -> Integer
+part :: Int -> [Monkey] -> Int
 part n ms = map count ms' |> sortOn negate |> take 2 |> product
   where
     msCnt = length ms
-    rounds 1 = 20
-    rounds 2 = 1000
-    ms' = foldl' (procMonkey n) ms [mId | _r <- [1..rounds n], mId <- [0..msCnt-1]]
+    rounds = 20
+    ms' = foldl' procMonkey ms [mId | _r <- [1..rounds], mId <- [0..msCnt-1]]
 
-procMonkey :: Int -> [Monkey] -> Int -> [Monkey]
-procMonkey p ms mId = setAt mId m' ms'
+procMonkey :: [Monkey] -> Int -> [Monkey]
+procMonkey ms mId = setAt mId m' ms'
   where
     M {..} = ms !! mId
-    m' = M {items = S.empty, count = count + toInteger (S.length items), ..}
+    m' = M {items = S.empty, count = count + S.length items, ..}
     ms' = foldl' procItem ms items
-    procItem :: [Monkey] -> Integer -> [Monkey]
+    procItem :: [Monkey] -> Int -> [Monkey]
     procItem ms it = sendItem mId' it' ms
       where
-        it' = (if p == 1 then (`div` 3) else id) $ op it
+        it' = op it `div` 3
         mId' = if test it' then ifTrue else ifFalse
 
 sendItem mId it = modifyAt mId (\M {..} -> M { items = items :|> it, ..})
@@ -62,21 +61,20 @@ parseMonkey
         count = 0
      }
 
-parseOp :: String -> Integer -> Integer -> Integer
+parseOp :: String -> Int -> Int -> Int
 parseOp = \case
   "+" -> (+)
   "*" -> (*)
 
 data Monkey = M
   {
-    items   :: Seq Integer,
-    op      :: Integer -> Integer,
-    test    :: Integer -> Bool,
+    items   :: Seq Int,
+    op      :: Int -> Int,
+    test    :: Int -> Bool,
     ifTrue  :: Int,
     ifFalse :: Int,
-    count   :: Integer
+    count   :: Int
   }
-
 
 showMonkey M {..} = "items: " ++ show items
 
@@ -93,7 +91,7 @@ main  = interact (solve .> show)
 
 -- Solve both parts and return a list with two elements -- the results
 -- Input: problem's full text
-solve input = (part <$> [1,2]) <*> pure (parse input)
+solve input = (part <$> [1]) <*> pure (parse input)
 
 -- Turn problem's full text into something more structured
 parse :: String -> [Monkey]
