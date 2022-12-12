@@ -18,21 +18,25 @@ part :: Int -> [Monkey] -> Int
 part n ms = map count ms' |> sortOn negate |> take 2 |> product
   where
     msCnt = length ms
-    rounds = 20
-    ms' = foldl' procMonkey ms [mId | _r <- [1..rounds], mId <- [0..msCnt-1]]
+    rounds 1 = 20
+    rounds 2 = 10000
+    ms' = foldl' (procMonkey n) ms [mId | _r <- [1..rounds n], mId <- [0..msCnt-1]]
 
-procMonkey :: [Monkey] -> Int -> [Monkey]
-procMonkey ms mId = setAt mId m' ms'
+procMonkey :: Int -> [Monkey] -> Int -> [Monkey]
+procMonkey p ms mId = setAt mId m' ms'
   where
     M {..} = ms !! mId
     m' = M {items = S.empty, count = count + S.length items, ..}
     ms' = foldl' procItem ms items
+    md = modulus ms
     procItem :: [Monkey] -> Int -> [Monkey]
-    procItem ms it = sendItem mId' it' ms
+    procItem ms it = sendItem mId' (it' p) ms
       where
-        it' = op it `div` 3
-        mId' = if test it' then ifTrue else ifFalse
+        it' 1 = op it `div` 3
+        it' 2 = op it `mod` md
+        mId' = if (it' p `mod` test) == 0 then ifTrue else ifFalse
 
+modulus = map test .> product
 sendItem mId it = modifyAt mId (\M {..} -> M { items = items :|> it, ..})
 
 -- Read a group of lines of problem's input into something more structured
@@ -51,7 +55,7 @@ parseMonkey
                     "old" -> \old -> old `opP` old
                     _     -> opP (read opd),
         test = case words testS of
-            ["Test:", "divisible", "by", opd] -> \n -> n `mod` read opd == 0
+            ["Test:", "divisible", "by", opd] -> read opd
             _ -> error "unknown monkey test (not a \"divisible\"-test)",
         ifTrue = case words ifTrueS of
             ["If", "true:", "throw", "to", "monkey", opd] -> read opd,
@@ -70,7 +74,7 @@ data Monkey = M
   {
     items   :: Seq Int,
     op      :: Int -> Int,
-    test    :: Int -> Bool,
+    test    :: Int,
     ifTrue  :: Int,
     ifFalse :: Int,
     count   :: Int
@@ -91,7 +95,7 @@ main  = interact (solve .> show)
 
 -- Solve both parts and return a list with two elements -- the results
 -- Input: problem's full text
-solve input = (part <$> [1]) <*> pure (parse input)
+solve input = (part <$> [1,2]) <*> pure (parse input)
 
 -- Turn problem's full text into something more structured
 parse :: String -> [Monkey]
