@@ -6,6 +6,7 @@ build-depends: base, flow, extra
 
 import Flow ((.>), (|>))
 import Data.List
+import Data.Maybe
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
