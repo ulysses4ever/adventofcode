@@ -1,11 +1,13 @@
 #!/usr/bin/env cabal
 {- cabal:
-build-depends: base, flow, extra, linear, containers
+build-depends: base, flow, extra, linear, containers, lens
 -}
 {-# language LambdaCase #-}
+{-# language TypeApplications #-}
 {-# language TupleSections #-}
 
 import Flow ((.>), (|>))
+import Data.Foldable
 import Data.List
 import Data.List.Extra
 import Data.Maybe
@@ -14,6 +16,9 @@ import Data.Set (Set)
 import Linear.Vector
 import Linear.V3
 import Debug.Trace
+import Control.Lens.Operators ((^.))
+import Control.Arrow ((&&&))
+import Data.Sequence (fromList, Seq(..), (><))
 
 type V = V3 Int
 
@@ -22,9 +27,50 @@ type V = V3 Int
 part n inp = res n
   where
     ps = S.fromList inp
-    res 1 = foldl' f (S.size ps * 6)  ps
-    res 2 = res 1 - 6 * countTrapped ps
-    f n p =  countNeighboursInSet p ps |> (n -)
+
+    res 1 = surface ps
+    res 2 = surface (water ps) -- - rangeSize
+
+water ps = (walk S.empty $ border vl vh)
+    where
+    (vl, vh, rangeSize) = range ps
+    walk visited open = traceShow visited $ case open of
+      Empty -> visited
+      (p :<| open') ->
+        neighbours p
+        |> filter (\p
+            -> inRange p
+            && p `S.notMember` visited
+            && p `S.notMember` ps)
+        |> fromList
+        |> (>< open')
+        |> walk (p `S.insert` visited)
+
+    inRange p = vl `cmpVec` p && p `cmpVec` vh
+    cmpVec v1 v2 = and $ zipWith (<=) (toList v1) (toList v2)
+
+range :: Set V -> (V,V,Int)
+range ps = (vl, vh, rangeSize)
+  where
+    vecFromList [x,y,z] = V3 x y z
+    mnmx ps lens = ps
+      |> S.map (\v -> v ^. lens)
+      |> (minimum &&& maximum)
+    rs = map (mnmx ps) [_x, _y, _z]
+    vl@(V3 xl yl zl) = map fst rs |> vecFromList
+    vh@(V3 xh yh zh) = map snd rs |> vecFromList
+    rangeSize = 0 -- (xh - xl + 1)
+
+surface ps = foldl' f (S.size ps * 6)  ps
+   where
+     f n p =  countNeighboursInSet p ps |> (n -)
+
+border (V3 xl yl zl) (V3 xh yh zh) = fromList
+  [V3 x y z
+    | x <- [xl-1..xh+1]
+    , y <- [yl-1..yh+1]
+    , z <- [zl-1..zh+1]
+    ]
 
 countTrapped ps = S.size . snd . foldl' g (S.empty, S.empty) $ ps
   where
