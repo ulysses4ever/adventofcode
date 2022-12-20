@@ -10,11 +10,11 @@ import Data.Maybe
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part n = id -- map (score n) .> sum
+part n = length
 
 -- Read one line of problem's input into something more structured
--- parseLine :: String -> ???
-parseLine = id
+parseLine :: String -> Int
+parseLine = read
 
 {--------------------------------------------------------
 --
