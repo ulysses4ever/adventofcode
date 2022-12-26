@@ -22,13 +22,26 @@ part n inp = length inp
 
 mix v = runST (unsafeThaw v >>= go 0 >>= unsafeFreeze)
   where
-    go len mv = pure mv
-    go i mv = do
-      x <- V.unsafeRead i mv
-      -- let i' = if x > 0 then
-      let j = (i + x + len) `mod` len
-          -- s1 = V.slice (min i j) (abs (i - j + 1) mv
-      pure mv
+    go i mv
+      | i == len = pure mv
+      | otherwise = do
+        x <- V.unsafeRead mv i
+        -- let i' = if x > 0 then
+        let j = (i + x + len) `mod` len
+{-
+    x    v
+0 1 2 3 4 5
+a b c d e f
+
+    x
+0 1 2 3 4 5
+a b d d e f
+
+-}
+            start = min i j
+            width = abs (i - j + 1)
+            s1 = V.slice start width mv
+        pure mv
     len = VI.length v
 
 -- Read one line of problem's input into something more structured
