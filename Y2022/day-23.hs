@@ -21,12 +21,17 @@ type P = V2 Int
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> [P] -> Int
-part p ps = -- range
-  finalElfs
+part p ps = res p
+  -- finalElfs
+  -- seq finalElfs 1
   where
-    finalElfs = sort $ goRounds 1 (cycle schdPattern) ps
-    goRounds 0 _ ps = ps
-    goRounds i schedule ps = goRounds (i-1) (tail schedule) ps'
+    res 1 | (xrg, yrg) <- range finalElfs = xrg * yrg - length ps
+    res 2 = 0
+
+    finalElfs = sort $ goRounds 10 (cycle schdPattern) ps
+    goRounds 0 _ ps = ps -- trace (showPoints ps) ps
+    goRounds i schedule ps = -- trace (showPoints ps) $
+      goRounds (i-1) (tail schedule) ps'
       where
         psSet = S.fromList ps
         props = M.fromList
@@ -34,14 +39,17 @@ part p ps = -- range
           $ concat
           $ filter (length .> (== 1))
           $ groupOn snd
+          $ sortOn snd
           $ filter (not . isNothing . snd)
           $ zip ps
           $ map propose ps
         propose :: P -> Maybe P
         propose elf
-          =   (+ elf)
+          | needNoStep elf = Nothing
+          | otherwise = (+ elf)
           <$> (listToMaybe
           $   filter (canStep elf) (take 4 schedule))
+        needNoStep elf = all (`S.notMember` psSet) (nhood elf)
         canStep :: P -> P -> Bool
         canStep elf dir = let
           p = perp dir
@@ -54,14 +62,32 @@ part p ps = -- range
 
     schdPattern = [n,s,w,e]
 
---range :: [P] -> (Int,Int)
+nhood :: P -> [P]
+nhood p = (+ p) <$>
+  [ V2 x y | x <- [-1..1], y <- [-1..1], x /= 0 || y /= 0 ]
+
+range :: [P] -> (Int,Int)
 range ps = (xmax - xmin + 1, ymax - ymin + 1)
+  where
+    ((xmin, xmax), (ymin, ymax)) = minMax2D ps
+
+minMax2D ps = ((xmin, xmax), (ymin, ymax))
   where
     mnmx ps lens = ps
       |> map (\v -> v ^. lens)
       |> (minimum &&& maximum)
     mnmxVal@[(xmin, xmax), (ymin, ymax)] = map (mnmx ps) [_x, _y]
 
+showPoints :: [P] -> String
+showPoints ps = unlines $ foldl' -- traceShow ps $
+    (\ls r ->
+      ls ++ (pure $ foldl' (\cs c ->
+        cs ++ pure (if V2 r c `S.member` psSet then '#' else '.'))
+      [] [ymin..ymax]))
+    [] [xmin..xmax]
+  where
+    ((xmin, xmax), (ymin, ymax)) = minMax2D ps
+    psSet = S.fromList ps
 
 parse inp = res
   where
