@@ -20,29 +20,27 @@ import Debug.Trace
 type P = V2 Int
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
--- part :: Int -> [P] -> Int
 part p ps = res p
-  -- finalElfs
-  -- seq finalElfs 1
   where
     res 1 | (xrg, yrg) <- range finalElfs = xrg * yrg - length ps
-    res 2 = 0
+    res 2 = 1 + (length $ takeWhile (not . null) rounds)
 
-    finalElfs = sort $ goRounds 10 (cycle schdPattern) ps
-    goRounds 0 _ ps = ps -- trace (showPoints ps) ps
-    goRounds i schedule ps = -- trace (showPoints ps) $
-      goRounds (i-1) (tail schedule) ps'
+    finalElfs = sort $ rounds !! 9
+    rounds = goRounds (cycle schdPattern) ps
+    goRounds schedule ps
+      | all isNothing proposals = [[]]
+      | otherwise = ps' : goRounds (tail schedule) ps'
       where
         psSet = S.fromList ps
         props = M.fromList
-          $ map (\(e, (Just e')) -> (e, e'))
-          $ concat
-          $ filter (length .> (== 1))
-          $ groupOn snd
-          $ sortOn snd
-          $ filter (not . isNothing . snd)
-          $ zip ps
-          $ map propose ps
+          . map (\(e, (Just e')) -> (e, e'))
+          . concat
+          . filter (length .> (== 1))
+          . groupOn snd
+          . sortOn snd
+          . filter (not . isNothing . snd)
+          $ zip ps proposals
+        proposals = map propose ps
         propose :: P -> Maybe P
         propose elf
           | needNoStep elf = Nothing
@@ -114,4 +112,4 @@ main  = interact (solve .> show)
 
 -- Solve both parts and return a list with two elements -- the results
 -- Input: problem's full text
-solve input = (part <$> [1]) <*> pure (parse input)
+solve input = (part <$> [1,2]) <*> pure (parse input)
