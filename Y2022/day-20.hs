@@ -1,6 +1,6 @@
 #!/usr/bin/env cabal
 {- cabal:
-build-depends: base, flow, extra, vector
+build-depends: base, flow, extra, vector, containers
 -}
 {-# language LambdaCase #-}
 
@@ -11,37 +11,35 @@ import Data.Maybe
 import qualified Data.Vector.Unboxed.Mutable as V
 import Data.Vector.Unboxed (Vector, fromList, unsafeThaw, unsafeFreeze)
 import qualified Data.Vector.Unboxed as VI (length)
+import Debug.Trace
 
 type V = Vector Int
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part n inp = length inp
+part n inp = seq (mix v) 1
   where
     v = fromList inp
+
+-- v=fromList [1,2,3::Int]
 
 mix v = runST (unsafeThaw v >>= go 0 >>= unsafeFreeze)
   where
     go i mv
-      | i == len = pure mv
+      | i == len = traceShow v (pure mv)
       | otherwise = do
         x <- V.unsafeRead mv i
-        -- let i' = if x > 0 then
         let j = (i + x + len) `mod` len
-{-
-    x    v
-0 1 2 3 4 5
-a b c d e f
-
-    x
-0 1 2 3 4 5
-a b d d e f
-
--}
-            start = min i j
-            width = abs (i - j + 1)
-            s1 = V.slice start width mv
-        pure mv
+            width = abs (i - j)
+            (startSrc, startTrg)
+              | i <= j = (i+1, i)
+              | otherwise = (j,j+1)
+            src = V.slice startSrc width mv
+            trg = V.slice startTrg width mv
+        traceShow v (pure ())
+        V.move trg src
+        V.unsafeWrite mv j x
+        go (if j < i then i else i+1) mv
     len = VI.length v
 
 -- Read one line of problem's input into something more structured
