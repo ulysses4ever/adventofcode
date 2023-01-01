@@ -18,19 +18,20 @@ type V = Vector (Int, Bool)
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part n inp = res n
+part n inp = res n v'
   where
-    res 1 = z 1000 + z 2000 + z 3000
-    res 2 = 0
+    res 1 v = sum $ map (z v') [1000, 2000, 3000]
+    res 2 _ = 0
 
-    v = fromList $ zip inp $ repeat True -- at start, everyone needs a move
-    v' = VI.map fst $ mix v
-    zeroIdx = VI.elemIndex 0 v' |> fromJust
-    a <+> b = (a + b) `mod` (VI.length v')
-    z n = v' VI.! (zeroIdx <+> n)
+    v = fromList inp
+    v' = mix v
 
-mix v = runST (unsafeThaw v >>= go 0 >>= unsafeFreeze)
+    zeroIdx v = VI.elemIndex 0 v |> fromJust
+    z v n = v VI.! ((zeroIdx v + n) `mod` (VI.length v))
+
+mix v = runST (unsafeThaw v' >>= go 0 >>= unsafeFreeze) |> VI.map fst
   where
+    v' = VI.zip v $ VI.replicate len True -- at start, everyone needs a move
     go i mv
       | i == len = pure mv -- traceShow (VI.map fst v) (pure mv)
       | otherwise = do
