@@ -18,13 +18,16 @@ type V = Vector (Int, Bool)
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part n inp = res n v'
+part n inp = res n
   where
-    res 1 v = sum $ map (z v') [1000, 2000, 3000]
-    res 2 _ = 0
+    res 1 = score v'
+    res 2 = score v''
 
-    v = fromList inp
-    v' = mix v
+    score v = sum $ map (z v) [1000, 2000, 3000]
+
+    v = fromList $ zip [0..] inp
+    v' = VI.map snd $ mix v
+    v'' = VI.map snd $ iterate mix v !! 1
 
     zeroIdx v = VI.elemIndex 0 v |> fromJust
     z v n = v VI.! ((zeroIdx v + n) `mod` (VI.length v))
@@ -32,10 +35,13 @@ part n inp = res n v'
 mix v = runST (unsafeThaw v' >>= go 0 >>= unsafeFreeze) |> VI.map fst
   where
     v' = VI.zip v $ VI.replicate len True -- at start, everyone needs a move
-    go i mv
-      | i == len = pure mv -- traceShow (VI.map fst v) (pure mv)
+    go i' mv
+      | i' == len = pure mv
+        -- traceShow (VI.map (fst .> snd) v') (pure mv)
       | otherwise = do
-        (x, inQueue) <- V.unsafeRead mv i
+        -- trace ("Step " ++ show i') (pure())
+        let Just i = VI.findIndex (fst .> fst .> (== i')) v'
+        ((_, x), inQueue) <- V.unsafeRead mv i
         let j = (i + x + (x + i) `div` len) `mod` len
             width = abs (i - j)
             (startSrc, startTrg)
@@ -45,12 +51,14 @@ mix v = runST (unsafeThaw v' >>= go 0 >>= unsafeFreeze) |> VI.map fst
             trg = V.slice startTrg width mv
         if inQueue
           then do
-            -- traceShow (VI.map fst v) (pure ())
+            -- trace ("Moving " ++ show x ++ " at index " ++ show i ++ " to index " ++ show j) (pure())
+            -- v'' <- unsafeFreeze mv
+            -- traceShow (VI.map (fst .> snd) v'') (pure ())
             V.move trg src
-            V.unsafeWrite mv j (x, False)
-            go (if j < i then i+1 else i) mv
+            V.unsafeWrite mv j ((i', x), False)
+            go (if j < i then i'+1 else i') mv
           else
-            go (i+1) mv
+            go (i'+1) mv
     len = VI.length v
 
 -- Read one line of problem's input into something more structured
