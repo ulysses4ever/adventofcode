@@ -1,11 +1,12 @@
 #!/usr/bin/env cabal
 {- cabal:
-build-depends: base, flow, extra, linear, containers, lens
+build-depends: base, flow, extra, linear, containers, lens, pretty-simple, search-algorithms, transformers
 -}
 {-# language LambdaCase #-}
 {-# language TypeApplications #-}
 {-# language TupleSections #-}
 
+import Algorithm.Search
 import Flow ((.>), (|>))
 import Data.Foldable
 import Data.List
@@ -19,6 +20,8 @@ import Debug.Trace
 import Control.Lens.Operators ((^.))
 import Control.Arrow ((&&&))
 import Data.Sequence (fromList, Seq(..), (><))
+import Text.Pretty.Simple
+import Control.Monad.Trans.Writer.CPS
 
 type V = V3 Int
 
@@ -31,26 +34,43 @@ part n inp = res n
     res 1 = surface ps
     res 2 = surface (water ps) -- - rangeSize
 
-water ps = (walk S.empty $ border vl vh)
+waterAndTrapped :: [V] -> ([V], [V])
+waterAndTrapped ps = undefined
+  where
+    psSet = S.fromList ps
+    start = concatMap neighbours ps
+    res = foldl' step (S.empty, S.empty, S.empty) start
+    upd s@(trapped, water, visited) p = case walk trapped water p of
+      Left  newTrapped -> (trapped `S.merge` S.fromList newTrapped, water)
+      Right newWater   -> (trapped, water `S.merge` S.fromList newWater, visited')
+      where
+        visited' = p `S.insert` visited
+    walk trapped water start = fst . runWriterT $ bfsM next final start
+      where
+        next p = (neighbours p `prunning` (`S.member` psSet)
+
+water ps = walk S.empty $ border vl vh
     where
-    (vl, vh, rangeSize) = range ps
-    walk visited open = traceShow visited $ case open of
-      Empty -> visited
-      (p :<| open') ->
-        neighbours p
-        |> filter (\p
-            -> inRange p
-            && p `S.notMember` visited
-            && p `S.notMember` ps)
-        |> fromList
-        |> (>< open')
-        |> walk (p `S.insert` visited)
+    (vl, vh) --, rangeSize)
+      = range ps
+    walk visited open = -- traceShow visited $
+      case open of
+        Empty -> visited
+        (p :<| open') ->
+          neighbours p
+          |> filter (\p
+              -> inRange p
+              && p `S.notMember` visited
+              && p `S.notMember` ps)
+          |> fromList
+          |> (>< open')
+          |> walk (p `S.insert` visited)
 
     inRange p = vl `cmpVec` p && p `cmpVec` vh
-    cmpVec v1 v2 = and $ zipWith (<=) (toList v1) (toList v2)
+    cmpVec v1 v2 = and $ zipWith (<) (toList v1) (toList v2)
 
-range :: Set V -> (V,V,Int)
-range ps = (vl, vh, rangeSize)
+-- range :: Set V -> (V,V,Int)
+range ps = (vl, vh) -- , rangeSize)
   where
     vecFromList [x,y,z] = V3 x y z
     mnmx ps lens = ps
@@ -65,11 +85,21 @@ surface ps = foldl' f (S.size ps * 6)  ps
    where
      f n p =  countNeighboursInSet p ps |> (n -)
 
+cube (V3 xl yl zl) (V3 xh yh zh) = fromList
+  [V3 x y z
+    | x <- [xl..xh]
+    , y <- [yl..yh]
+    , z <- [zl..zh]
+    ]
+
 border (V3 xl yl zl) (V3 xh yh zh) = fromList
   [V3 x y z
     | x <- [xl-1..xh+1]
     , y <- [yl-1..yh+1]
     , z <- [zl-1..zh+1]
+    , x `elem` [xl-1, xh+1]
+      || y `elem` [yl-1, yh+1]
+      || z `elem` [zl-1, zh+1]
     ]
 
 countTrapped ps = S.size . snd . foldl' g (S.empty, S.empty) $ ps
