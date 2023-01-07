@@ -9,6 +9,7 @@ build-depends: base, flow, extra, linear, containers, lens, pretty-simple, searc
 import Algorithm.Search
 import Flow ((.>), (|>))
 import Data.Foldable
+import Data.Functor.Identity
 import Data.List
 import Data.List.Extra
 import Data.Maybe
@@ -27,50 +28,45 @@ type V = V3 Int
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> [V] -> Int
-part n inp = res n
+part n ps = res n
   where
-    ps = S.fromList inp
 
-    res 1 = surface ps
-    res 2 = surface (water ps) -- - rangeSize
+    res 1 = length $ surf
+    res 2 =
+      length $ filter (`S.member` trapped) surf
 
-waterAndTrapped :: [V] -> ([V], [V])
-waterAndTrapped ps = undefined
+    surf = surface' ps
+    (water, trapped) = waterAndTrapped ps surf
+
+surface' :: [V] -> [V]
+surface' ps = concatMap neighbors ps
+  |> filter (`S.notMember` S.fromList ps)
+
+waterAndTrapped :: [V] -> [V] -> (Set V, Set V)
+waterAndTrapped ps surf = foldl' upd (S.empty, S.empty) surf
   where
     psSet = S.fromList ps
-    start = concatMap neighbours ps
-    res = foldl' step (S.empty, S.empty, S.empty) start
-    upd s@(trapped, water, visited) p = case walk trapped water p of
-      Left  newTrapped -> (trapped `S.merge` S.fromList newTrapped, water)
-      Right newWater   -> (trapped, water `S.merge` S.fromList newWater, visited')
+    (vl,vh) = range psSet
+    upd s@(trapped, water) p = case walk trapped water p of
+      Left  newTrapped -> (trapped `S.union` S.fromList newTrapped, water)
+      Right newWater   -> (trapped, water `S.union` S.fromList newWater)
+    walk :: Set V -> Set V -> V -> Either [V] [V]
+    walk trapped water start = case runWriterT $ bfsM next final start of
+      Identity (Nothing, newTrapped) -> Left $ start:newTrapped
+      Identity (Just w, newWater)    -> Right $ start:newWater
       where
-        visited' = p `S.insert` visited
-    walk trapped water start = fst . runWriterT $ bfsM next final start
-      where
-        next p = (neighbours p `prunning` (`S.member` psSet)
+        next p = do
+          tell [p]
+          pure (neighbors p |> filter (`S.notMember` psSet))
+        final p
+          | not (inRange vl vh p) || p `S.member` water = pure True
+          | otherwise = pure False
 
-water ps = walk S.empty $ border vl vh
-    where
-    (vl, vh) --, rangeSize)
-      = range ps
-    walk visited open = -- traceShow visited $
-      case open of
-        Empty -> visited
-        (p :<| open') ->
-          neighbours p
-          |> filter (\p
-              -> inRange p
-              && p `S.notMember` visited
-              && p `S.notMember` ps)
-          |> fromList
-          |> (>< open')
-          |> walk (p `S.insert` visited)
+inRange vl vh p = vl `cmpVec` p && p `cmpVec` vh
+cmpVec v1 v2 = and $ zipWith (<=) (toList v1) (toList v2)
 
-    inRange p = vl `cmpVec` p && p `cmpVec` vh
-    cmpVec v1 v2 = and $ zipWith (<) (toList v1) (toList v2)
-
--- range :: Set V -> (V,V,Int)
-range ps = (vl, vh) -- , rangeSize)
+range :: Set V -> (V,V)
+range ps = (vl, vh)
   where
     vecFromList [x,y,z] = V3 x y z
     mnmx ps lens = ps
@@ -79,49 +75,7 @@ range ps = (vl, vh) -- , rangeSize)
     rs = map (mnmx ps) [_x, _y, _z]
     vl@(V3 xl yl zl) = map fst rs |> vecFromList
     vh@(V3 xh yh zh) = map snd rs |> vecFromList
-    rangeSize = 0 -- (xh - xl + 1)
-
-surface ps = foldl' f (S.size ps * 6)  ps
-   where
-     f n p =  countNeighboursInSet p ps |> (n -)
-
-cube (V3 xl yl zl) (V3 xh yh zh) = fromList
-  [V3 x y z
-    | x <- [xl..xh]
-    , y <- [yl..yh]
-    , z <- [zl..zh]
-    ]
-
-border (V3 xl yl zl) (V3 xh yh zh) = fromList
-  [V3 x y z
-    | x <- [xl-1..xh+1]
-    , y <- [yl-1..yh+1]
-    , z <- [zl-1..zh+1]
-    , x `elem` [xl-1, xh+1]
-      || y `elem` [yl-1, yh+1]
-      || z `elem` [zl-1, zh+1]
-    ]
-
-countTrapped ps = S.size . snd . foldl' g (S.empty, S.empty) $ ps
-  where
-    g state = neighbours
-      .> foldl' (notVisitedOrTrapped ps) state
-
-countNeighboursInSet p ps
-      =  neighbours p
-      |> filter (`S.member` ps)
-      |> length
-
-notVisitedOrTrapped ps state@(visited, trapped) n
-  | n `S.member` visited = (visited, trapped)
-  | countNeighboursInSet n ps == 6
-    && n `S.notMember` ps = traceShow n $ visited' trapped'
-  | otherwise = visited' trapped
-    where
-      visited' = (S.insert n visited,)
-      trapped' = S.insert n trapped
-
-neighbours p = map (p ^+^) basis ++ map (p ^-^) basis
+neighbors p = map (p ^+^) basis ++ map (p ^-^) basis
 
 -- Read one line of problem's input into something more structured
 parseLine :: String -> V
