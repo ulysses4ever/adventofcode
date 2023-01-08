@@ -3,13 +3,10 @@
 build-depends: base, flow, extra, linear, containers, lens, pretty-simple, search-algorithms, transformers
 -}
 {-# language LambdaCase #-}
-{-# language TypeApplications #-}
-{-# language TupleSections #-}
 
 import Algorithm.Search
 import Flow ((.>), (|>))
 import Data.Foldable
-import Data.Functor.Identity
 import Data.List
 import Data.List.Extra
 import Data.Maybe
@@ -20,9 +17,8 @@ import Linear.V3
 import Debug.Trace
 import Control.Lens.Operators ((^.))
 import Control.Arrow ((&&&))
-import Data.Sequence (fromList, Seq(..), (><))
 import Text.Pretty.Simple
-import Control.Monad.Trans.Writer.CPS
+import Control.Monad.Trans.RWS.CPS
 
 type V = V3 Int
 
@@ -42,6 +38,8 @@ surface' :: [V] -> [V]
 surface' ps = concatMap neighbors ps
   |> filter (`S.notMember` S.fromList ps)
 
+data Surface = Water | Trapped
+
 waterAndTrapped :: [V] -> [V] -> (Set V, Set V)
 waterAndTrapped ps surf = foldl' upd (S.empty, S.empty) surf
   where
@@ -51,15 +49,17 @@ waterAndTrapped ps surf = foldl' upd (S.empty, S.empty) surf
       Left  newTrapped -> (trapped `S.union` S.fromList newTrapped, water)
       Right newWater   -> (trapped, water `S.union` S.fromList newWater)
     walk :: Set V -> Set V -> V -> Either [V] [V]
-    walk trapped water start = case runWriterT $ bfsM next final start of
-      Identity (Nothing, newTrapped) -> Left $ start:newTrapped
-      Identity (Just w, newWater)    -> Right $ start:newWater
+    walk trapped water start = case execRWS (bfsM next final start) () Trapped of
+      (Trapped, newTrapped) -> Left $ start:newTrapped
+      (Water, newWater)     -> Right $ start:newWater
       where
-        next p = do
-          tell [p]
+        next p = censor (p :) $
           pure (neighbors p |> filter (`S.notMember` psSet))
         final p
-          | not (inRange vl vh p) || p `S.member` water = pure True
+          | not (inRange vl vh p) || p `S.member` water = do
+              put Water
+              pure True
+          | p `S.member` trapped = pure True
           | otherwise = pure False
 
 inRange vl vh p = vl `cmpVec` p && p `cmpVec` vh
