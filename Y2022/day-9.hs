@@ -1,6 +1,6 @@
 #!/usr/bin/env cabal
 {- cabal:
-build-depends: base, flow, extra, linear
+build-depends: base, flow, extra, linear, lens, containers
 -}
 {-# language TupleSections #-}
 {-# language BangPatterns #-}
@@ -11,27 +11,50 @@ import Data.List
 import Data.List.Extra (nubOrd)
 import Linear.Vector
 import Linear.V2
+import Linear.Metric (dot)
 import Debug.Trace
+import Control.Arrow ((&&&))
+import Control.Lens.Operators ((^.))
+import qualified Data.Set as S
 
 type P = V2 Int
 pattern P x y = V2 x y
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part n i = nubOrd tr |> length -- map (score n) .> sum
+part n = simulate .> nubOrd .> length
   where
-    (h,t,tr) = foldl' moveWithTrace (P 0 0, P 0 0, []) i
 
 type State = (P, P, [P])
-type Move = (P, Int)
+type Dir = P
+type Move = (Dir, Int)
+
+simulate ps = let
+  (_,_,tr) = foldl' moveWithTrace (zero, zero, [zero]) ps
+  in tr
 
 moveWithTrace :: State -> Move -> State
-moveWithTrace (h, t, ps) mv@(m,n) = traceShow (h',t') (h',t',ps')
+moveWithTrace (h, t, ps) mv@(d,n) = -- traceShow (h',t')
+  (h',t',ps')
   where
-    h' = h + (n <.> m)
-    t' = moveTail h t mv
-    ps' = runTrace t t' ++ ps
+    trace = take (n+1) $ iterate (moveOneStep d) (h,t)
+    (h',t') = last trace
+    ps' = map snd trace ++ ps
 
+moveOneStep :: Dir -> (P, P) -> (P, P)
+moveOneStep d (h, t) = (h + d, moveTailOneStep h t d)
+
+moveTailOneStep :: P -> P -> Dir -> P
+moveTailOneStep h t d
+  | (h - t) `dot` d == 1 = h
+  | otherwise = t
+
+
+--
+-- Failed attempts
+--
+
+-- this looks right but the trace business didn't quite work somehow
 moveTail :: P -> P -> Move -> P
 moveTail h t (m, n) = t'
   where
@@ -41,9 +64,9 @@ moveTail h t (m, n) = t'
   tlen = n - 1 + (d <#> m)
   t' = t + (min tlen 1 <.> j) + (tlen <.> m)
 
-(P x y) <#> (P u v) = x*u + y*v
-(P x y) <&> (P u v) = P (x*u) (y*v)
-n <.> (P u v) = P (n*u) (n*v)
+(<#>) = dot
+(<&>) = (*)
+(<.>) = (*^)
 rot (P u v) = P v u
 
 runTrace (P x1 y1) (P x2 y2) =
@@ -67,6 +90,30 @@ l = P (-1) 0
 r = P 1 0
 u = P 0 1
 d = P 0 (-1)
+
+
+--
+--  Debug Utils
+--
+
+minMax2D ps = ((xmin, xmax), (ymin, ymax))
+  where
+    mnmx ps lens = ps
+      |> map (\v -> v ^. lens)
+      |> (minimum &&& maximum)
+    mnmxVal@[(xmin, xmax), (ymin, ymax)] = map (mnmx ps) [_x, _y]
+
+showPoints :: [P] -> String
+showPoints ps = unlines $ foldl'
+    (\ls r ->
+      ls ++ (pure $ foldl' (\cs c ->
+        cs ++ pure (if V2 c r `S.member` psSet then '#' else '.'))
+      [] [xmin..xmax]
+      ))
+    [] (reverse [ymin..ymax])
+  where
+    ((xmin, xmax), (ymin, ymax)) = minMax2D ps
+    psSet = S.fromList ps
 
 {--------------------------------------------------------
 --
