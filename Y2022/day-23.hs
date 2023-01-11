@@ -77,7 +77,7 @@ minMax2D ps = ((xmin, xmax), (ymin, ymax))
     mnmxVal@[(xmin, xmax), (ymin, ymax)] = map (mnmx ps) [_x, _y]
 
 showPoints :: [P] -> String
-showPoints ps = unlines $ foldl' -- traceShow ps $
+showPoints ps = unlines $ foldl'
     (\ls r ->
       ls ++ (pure $ foldl' (\cs c ->
         cs ++ pure (if V2 r c `S.member` psSet then '#' else '.'))
