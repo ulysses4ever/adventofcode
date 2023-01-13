@@ -11,7 +11,7 @@ import Data.List
 import Data.List.Extra (nubOrd)
 import Linear.Vector
 import Linear.V2
-import Linear.Metric (dot)
+import Linear.Metric (dot, quadrance)
 import Debug.Trace
 import Control.Arrow ((&&&))
 import Control.Lens.Operators ((^.))
@@ -22,16 +22,61 @@ pattern P x y = V2 x y
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part n = simulate .> nubOrd .> length
+part p = simulate p .> nubOrd .> length
   where
 
-type State = (P, P, [P])
+type Trace = [P]
+type State = (P, P, Trace)
 type Dir = P
 type Move = (Dir, Int)
 
-simulate ps = let
+simulate 1 ps = let
   (_,_,tr) = foldl' moveWithTrace (zero, zero, [zero]) ps
   in tr
+
+simulate 2 ps = res
+  where
+    initRope = replicate 10 zero
+    res = snd $ foldl' moveLongWithTrace (initRope, [zero]) ps
+
+type Step = P
+type Rope = [P]
+type StateLong = (Rope, Trace)
+
+moveLongWithTrace :: StateLong -> Move -> StateLong
+moveLongWithTrace (rope, trace_) mv@(dir, n) = -- trace (showPoints ropeUpd)
+  (ropeUpd, traceUpd)
+  where
+    traceDelta = take (n+1) $ iterate (moveLongOneStep dir) rope
+    ropeUpd = last traceDelta
+    traceUpd = map last traceDelta ++ trace_
+
+moveLongOneStep :: Step -> Rope -> Rope
+moveLongOneStep headStep rope =
+  go [] (head rope + headStep : tail rope)
+  where
+    go :: Rope -> Rope -> Rope
+    go newRopeRev [t] = reverse $ t : newRopeRev
+    go newRopeRev oldRope@(hd':tl:rest)
+      | Just tailNew <- tryMoveTailOneStep hd' tl =
+          go (hd':newRopeRev) (tailNew:rest)
+      | otherwise = reverse newRopeRev ++ oldRope
+
+tryMoveTailOneStep :: P -> P -> Maybe P
+tryMoveTailOneStep h' t
+  | d /= d' = Just $ t + d'
+  | otherwise = Nothing
+  where
+    d = h' - t
+    d' = fmap red d
+    red n
+      | abs n == 2 = n `div` 2
+      | otherwise = n
+
+
+--
+-- Part 1
+--
 
 moveWithTrace :: State -> Move -> State
 moveWithTrace (h, t, ps) mv@(d,n) = -- traceShow (h',t')
@@ -127,7 +172,7 @@ main  = interact (solve .> show)
 
 -- Solve both parts and return a list with two elements -- the results
 -- Input: problem's full text
-solve input = (part <$> [1]) <*> pure (parse input)
+solve input = (part <$> [1,2]) <*> pure (parse input)
 
 -- Turn problem's full text into something more structured
 -- parse :: String -> ???
