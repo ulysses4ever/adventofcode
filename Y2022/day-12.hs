@@ -25,12 +25,16 @@ type C = [[El]]
 -- part :: Int -> ??? -> Int
 part p inp = res
   where
-    res = bfs
+    sp1 = sp inp (initial inp)
+    res = sp1 |> length
+
+sp :: C -> P -> [P]
+sp inp start = bfs
       next
       (\p -> get inp p == 'E')
-      (initial inp)
+      start
       |> fromJust
-      |> length
+  where
     next p = neighbors p
       |> filter inBounds
       |> filter (elevateOk p)
@@ -72,7 +76,7 @@ main  = interact (solve .> show)
 
 -- Solve both parts and return a list with two elements -- the results
 -- Input: problem's full text
-solve input = (part <$> [1,2]) <*> pure (parse input)
+solve input = (part <$> [1]) <*> pure (parse input)
 
 -- Turn problem's full text into something more structured
 -- parse :: String -> ???
