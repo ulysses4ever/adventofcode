@@ -1,6 +1,6 @@
 #!/usr/bin/env cabal
 {- cabal:
-build-depends: base, flow, extra, search-algorithms, linear
+build-depends: base, flow, extra, search-algorithms, linear, array
 -}
 {-# language LambdaCase #-}
 {-# language BlockArguments #-}
@@ -14,6 +14,7 @@ import Linear.V2
 import Data.Maybe
 import Data.Char
 import Debug.Trace
+import Data.Array
 
 type P = V2 Int
 pattern P x y = V2 x y
@@ -31,15 +32,16 @@ part p inp = res
 sp :: C -> P -> [P]
 sp inp start = bfs
       next
-      (\p -> get inp p == 'E')
+      (\p -> get arr p == 'E')
       start
       |> fromJust
   where
+    arr = listArray (P 0 0, P rmx cmx) (unlines inp)
     next p = neighbors p
       |> filter inBounds
       |> filter (elevateOk p)
     elevateOk p p' = elev p' <= elev p + 1
-    elev p = ord case get inp p of
+    elev p = ord case get arr p of
           'S' -> 'a'
           'E' -> 'z'
           e   -> e
@@ -47,8 +49,8 @@ sp inp start = bfs
     inBounds (P x y) = 0 <= x && x < rmx &&
       0 <= y && y < cmx
 
-get :: C -> P -> El
-get cont (P r c) = cont !! r !! c
+-- get :: C -> P -> El
+get cont p = cont ! p
 
 initial :: C -> P
 initial inp = P (length pre) (findIndex (== 'S') tar |> fromJust)
