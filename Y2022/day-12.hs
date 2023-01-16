@@ -29,12 +29,17 @@ part p inp = res
     res = sp1 |> length
 
 sp :: C -> P -> [P]
-sp inp start = bfs
+sp inp start = aStar
       next
+      dist
+      (dist finish)
       (\p -> get inp p == 'E')
       start
       |> fromJust
+      |> snd
   where
+    dist (P r1 c1) (P r2 c2) = abs (r1 - r2) + abs (c1 - c2)
+    finish = search 'E' inp
     next p = neighbors p
       |> filter inBounds
       |> filter (elevateOk p)
@@ -51,9 +56,11 @@ get :: C -> P -> El
 get cont (P r c) = cont !! r !! c
 
 initial :: C -> P
-initial inp = P (length pre) (findIndex (== 'S') tar |> fromJust)
+initial = search 'S'
+
+search needle inp = P (length pre) (findIndex (== needle) tar |> fromJust)
   where
-    (pre, tar:post) = span ('S' `notElem`) inp
+    (pre, tar:post) = span (needle `notElem`) inp
 
 size2 :: [[a]] -> P
 size2 m = P (length m) (length $ head m)
