@@ -1,6 +1,6 @@
 #!/usr/bin/env cabal
 {- cabal:
-build-depends: base, flow, extra, search-algorithms, linear
+build-depends: base, flow, extra, search-algorithms, linear, containers, transformers
 -}
 {-# language LambdaCase #-}
 {-# language BlockArguments #-}
@@ -13,6 +13,9 @@ import Linear.Vector
 import Linear.V2
 import Data.Maybe
 import Data.Char
+import qualified Data.Map as M
+import Control.Monad.Trans.State
+import Control.Monad (filterM)
 import Debug.Trace
 
 type P = V2 Int
@@ -20,26 +23,52 @@ pattern P x y = V2 x y
 
 type El = Char
 type C = [[El]]
+type M = M.Map P Int
+type Path = [P]
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part p inp = res
+part 1 inp = traceShow sp1 res
   where
     sp1 = sp inp (initial inp)
     res = sp1 |> length
-
-sp :: C -> P -> [P]
-sp inp start = bfs
-      next
-      (\p -> get inp p == 'E')
-      start
-      |> fromJust
+part 2 inp = min
   where
+    is = initial inp : allOtherInitials inp
+    (_, min) = foldl' upd (M.empty, maxBound) is
+    upd s@(prev, min) i = case sp2 i prev min inp of
+      Nothing -> s
+      Just (path, min') -> traceShow path (updPrev prev (i:path), min')
+    updPrev prev path = prev `M.union`
+      (M.fromList $ zip (reverse path) [0..])
+
+sp2 :: P -> M -> Int -> C -> Maybe (Path, Int)
+sp2 start prev min inp
+  | Just path <- mPath = if len < min
+      then Just (path, len)
+      else Nothing
+  | otherwise = Nothing
+  where
+    (mPath, len) = flip runState (0::Int) $ bfsM
+      next
+      (\p -> pure $ getEl inp p == 'E')
+      start
     next p = neighbors p
       |> filter inBounds
       |> filter (elevateOk p)
+      |> filterM shorter
+    (elevateOk, inBounds) = tests inp
+    shorter p = do
+      modify' (+ 1)
+      steps <- get
+      pure $ steps < min && case prev M.!? p of
+        Just minFromHere -> steps + minFromHere < min
+        Nothing -> True
+
+tests inp = (elevateOk, inBounds)
+  where
     elevateOk p p' = elev p' <= elev p + 1
-    elev p = ord case get inp p of
+    elev p = ord case getEl inp p of
           'S' -> 'a'
           'E' -> 'z'
           e   -> e
@@ -47,8 +76,26 @@ sp inp start = bfs
     inBounds (P x y) = 0 <= x && x < rmx &&
       0 <= y && y < cmx
 
-get :: C -> P -> El
-get cont (P r c) = cont !! r !! c
+sp :: C -> P -> [P]
+sp inp start = bfs
+      next
+      (\p -> getEl inp p == 'E')
+      start
+      |> fromJust
+  where
+    next p = neighbors p
+      |> filter inBounds
+      |> filter (elevateOk p)
+    (elevateOk, inBounds) = tests inp
+
+getEl :: C -> P -> El
+getEl cont (P r c) = cont !! r !! c
+
+allOtherInitials :: C -> [P]
+allOtherInitials inp =
+  map (uncurry P . (`divMod` (length $ head inp))) inds
+  where
+    inds = elemIndices 'a' (concat inp)
 
 initial :: C -> P
 initial inp = P (length pre) (findIndex (== 'S') tar |> fromJust)
@@ -76,7 +123,7 @@ main  = interact (solve .> show)
 
 -- Solve both parts and return a list with two elements -- the results
 -- Input: problem's full text
-solve input = (part <$> [1]) <*> pure (parse input)
+solve input = (part <$> [1,2]) <*> pure (parse input)
 
 -- Turn problem's full text into something more structured
 -- parse :: String -> ???
