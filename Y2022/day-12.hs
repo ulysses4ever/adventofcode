@@ -14,7 +14,7 @@ import Linear.V2
 import Data.Maybe
 import Data.Char
 import Debug.Trace
-import Data.Array
+import Data.Array.Unboxed
 
 type P = V2 Int
 pattern P x y = V2 x y
@@ -49,7 +49,7 @@ sp inp start = bfs
     inBounds (P x y) = 0 <= x && x < rmx &&
       0 <= y && y < cmx
 
--- get :: C -> P -> El
+get :: UArray P El -> P -> El
 get cont p = cont ! p
 
 initial :: C -> P
