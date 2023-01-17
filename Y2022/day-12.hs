@@ -28,7 +28,8 @@ type Path = [P]
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part 1 inp = traceShow sp1 res
+part 1 inp = -- traceShow sp1
+  res
   where
     sp1 = sp inp (initial inp)
     res = sp1 |> length
@@ -38,32 +39,34 @@ part 2 inp = min
     (_, min) = foldl' upd (M.empty, maxBound) is
     upd s@(prev, min) i = case sp2 i prev min inp of
       Nothing -> s
-      Just (path, min') -> traceShow path (updPrev prev (i:path), min')
+      Just (path, min') -> -- traceShow path
+        (updPrev prev (i:path), min')
     updPrev prev path = prev `M.union`
       (M.fromList $ zip (reverse path) [0..])
 
 sp2 :: P -> M -> Int -> C -> Maybe (Path, Int)
 sp2 start prev min inp
-  | Just path <- mPath = if len < min
-      then Just (path, len)
-      else Nothing
+  | Just path <- mPath = let len = length path in
+      if len < min
+        then Just (path, len)
+        else Nothing
   | otherwise = Nothing
   where
-    (mPath, len) = flip runState (0::Int) $ bfsM
+    (mPath, _steps) = flip runState (M.singleton start (0::Int)) $ bfsM
       next
       (\p -> pure $ getEl inp p == 'E')
       start
-    next p = neighbors p
-      |> filter inBounds
-      |> filter (elevateOk p)
-      |> filterM shorter
-    (elevateOk, inBounds) = tests inp
-    shorter p = do
-      modify' (+ 1)
+    next p = do
       steps <- get
-      pure $ steps < min && case prev M.!? p of
-        Just minFromHere -> steps + minFromHere < min
-        Nothing -> True
+      let stepsToHere = steps M.! p -- ought to exist
+          ns = neighbors p
+            |> filter inBounds
+            |> filter (elevateOk p)
+          minFromHere = M.findWithDefault 0 p prev
+          busted = stepsToHere + minFromHere >= min
+      put $ steps `M.union` (M.fromList . zip ns $ repeat (stepsToHere + 1))
+      pure if busted then [] else ns
+    (elevateOk, inBounds) = tests inp
 
 tests inp = (elevateOk, inBounds)
   where
