@@ -1,14 +1,18 @@
 #!/usr/bin/env cabal
 {- cabal:
-build-depends: base, flow, extra, linear
+build-depends: base, flow, extra, linear, unordered-containers
 -}
 {-# language LambdaCase #-}
 {-# language PatternSynonyms #-}
 
 import Flow ((.>), (|>))
 import Data.List
+import Data.Either
 import Data.List.Extra (chunksOf, split)
 import Data.Foldable.Extra (notNull)
+import Control.Arrow ((***))
+
+import qualified Data.HashMap.Strict as M
 
 import Debug.Trace
 
@@ -19,14 +23,33 @@ pattern P x y = V2 x y
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part n = id -- map (score n) .> sum
+part n inp = ms
+  where
+    ms@(lx, ly) = concat inp
+      |> partitionEithers
+      |> (make_maps *** make_maps)
+    make_maps = M.fromListWith (++)
+
+type Seg = (Int,Int)
+type KSegs = (Int, [Seg])
 
 -- Read one line of problem's input into something more structured
-parseLine :: String -> [P]
+parseLine :: String -> [Either KSegs KSegs]
 parseLine = split (`elem` ", ->")
   .> filter notNull
   .> chunksOf 2
-  .> map (\[x, y] -> P (read x) (read y))
+  .> (\ws -> zip ws $ tail ws)
+  .> map collect
+  where
+    collect ([sx1, sy1], [sx2, sy2])
+      |x1 == x2 = Left (x1, pure (min y1 y2, max y1 y2))
+      |y1 == y2 = Right (y1, pure (min x1 x2, max x1 x2))
+      | otherwise = error "impossible: line is not axis aligned"
+      where
+        x1 = read sx1
+        x2 = read sx2
+        y1 = read sy1
+        y2 = read sy2
 
 {--------------------------------------------------------
 --
