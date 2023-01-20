@@ -32,13 +32,12 @@ type Rocks = (M,M)
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part n = countSand
+part n = modelSand .> S.size
 
 type Set = S.HashSet P
 type State = (Set, Set, Bool)
 
--- countSand :: Rocks -> Int
-countSand inp = trace (showPoints $ S.toList closed) -- S.size
+modelSand inp = -- trace (showPoints $ S.toList closed)
   closed
   where
     initial = P 500 0
@@ -53,16 +52,19 @@ countSand inp = trace (showPoints $ S.toList closed) -- S.size
     isHalting (P _ y) = y == maxy
     go :: State -> P -> State
     go s@(discovered, closed, halt) current
-      | traceShow current False = undefined
+      -- | traceShow current False = undefined
       | halt = s
       | isHalting current = (discovered, closed, True)
-      | otherwise = (discovered'', current `S.insert` closed', halt')
+      | otherwise = (discovered'', closed'', halt')
           where
             ns = neighbors current
               |> filter ((`S.member` discovered) .> not)
               |> filter (not . collide rs)
             discovered' = discovered `S.union` (S.fromList ns)
             (discovered'', closed', halt') = foldl' go (discovered', closed, halt) ns
+            closed''
+              | halt' = closed'
+              | otherwise = current `S.insert` closed'
 
 neighbors p = (p +) <$>
   [ (P    0 1)
@@ -115,6 +117,7 @@ minMax2D ps = ((xmin, xmax), (ymin, ymax))
     mnmxVal@[(xmin, xmax), (ymin, ymax)] = map (mnmx ps) [_x, _y]
 
 showPoints :: [P] -> String
+showPoints [] = []
 showPoints ps = unlines $ foldl'
     (\ls r ->
       ls ++ (pure $ foldl' (\cs c ->
