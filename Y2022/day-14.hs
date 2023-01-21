@@ -32,16 +32,18 @@ type Rocks = (M,M)
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
 -- part :: Int -> ??? -> Int
-part n = modelSand .> S.size
+part p = modelSand p .> S.size
 
 type Set = S.HashSet P
 type State = (Set, Set, Bool)
 
-modelSand inp = -- trace (showPoints $ S.toList closed)
+modelSand p inp = -- trace (showPoints $ S.toList closed)
   closed
   where
     initial = P 500 0
-    rs = structureRocks inp
+    rs = structureRocks (if p == 1
+                         then inp
+                         else [Right (maxy+2, [(minBound, maxBound)])] : inp)
     maxy = foldl' mxFold 0 $ concat inp
       where
         mxFold mx (Left (x, ys)) = max mx (maximum $ map snd ys)
@@ -49,12 +51,14 @@ modelSand inp = -- trace (showPoints $ S.toList closed)
 
     (_,closed,_mx ) = go (S.singleton initial, S.empty, False) initial
 
-    isHalting (P _ y) = y == maxy
+    isHalting 1 (P _ y) = y == maxy
+    isHalting 2 _ = False
+
     go :: State -> P -> State
     go s@(discovered, closed, halt) current
       -- | traceShow current False = undefined
       | halt = s
-      | isHalting current = (discovered, closed, True)
+      | isHalting p current = (discovered, closed, True)
       | otherwise = (discovered'', closed'', halt')
           where
             ns = neighbors current
@@ -141,7 +145,7 @@ main  = interact (solve .> show)
 
 -- Solve both parts and return a list with two elements -- the results
 -- Input: problem's full text
-solve input = (part <$> [1]) <*> pure (parse input)
+solve input = (part <$> [1,2]) <*> pure (parse input)
 
 -- Turn problem's full text into something more structured
 -- parse :: String -> ???
