@@ -4,13 +4,16 @@ build-depends: base, flow, extra, linear, array
 -}
 {-# language LambdaCase #-}
 {-# language BlockArguments #-}
+{-# language PartialTypeSignatures #-}
 {-# language PatternSynonyms #-}
 
 import Flow ((.>), (|>))
 import Data.List
 import Data.Maybe
 import Data.Char
+import Data.Function
 import Data.Array
+import Debug.Trace
 
 import Linear.Vector
 import Linear.V2
@@ -22,13 +25,55 @@ type A = Array P Char
 data Cmd = Steps Int
   | Turn Char
   deriving Show
+type Input = (A, [Cmd])
+
+type Dir = P
+type State = (P, Dir)
 
 -- Solve part n (n is 1 or 2) of the problem: turn structured input into the result
--- part :: Int -> ??? -> Int
-part p = id -- map (score n) .> sum
+-- part :: Int -> Input -> _
+part p (map', cs) = res finish
+  where
+    colstart = elems map' |> takeWhile (== ' ') |> length
+    (_, maxP) = bounds map'
+    maxP' = (+1) <$> maxP
+    finish = foldl' exec (P 0 colstart, ri) cs
+    res (P r c, dir) = 1000 * (r+1) + 4 * (c+1) + weight dir
+    weight = \case
+      ri -> 0
+      dw -> 1
+      le -> 2
+      up -> 3
 
--- Read one line of problem's input into something more structured
-parse :: String -> (A, [Cmd])
+    exec st@(pos, dir) = traceShow st $ \case
+      Steps n -> (steps n st, dir)
+      Turn t -> (pos, turn dir t)
+
+    steps n (pos, dir) = go n pos where
+      go 0 pos = pos
+      go n pos = case map' ! pos' of
+        '#' -> pos
+        '.' -> go (n-1) pos'
+        _   -> error "impossible: steps into unknown territory"
+        where
+          inc pos = (pos + dir) `modVec` maxP'
+          pos' = iterate inc pos
+            |> tail
+            |> dropWhile ((map' !) .> (== ' '))
+            |> head
+
+    turn dir t = iterate perp dir !! case t of
+      'L' -> 1
+      'R' -> 3
+
+modVec (P x1 y1) (P x2 y2) = P (x1 `mod` x2) (y1 `mod` y2)
+
+up = P (-1) 0
+dw = P 1 0
+le = P 0 (-1)
+ri = P 0 1
+
+parse :: String -> Input
 parse inp = (map', commands')
   where
     (mapRows, empty:commands:[]) = span (not . null) $ lines inp
