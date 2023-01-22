@@ -3,6 +3,7 @@
 build-depends: base, flow, extra, linear, array
 -}
 {-# language LambdaCase #-}
+{-# language MultiWayIf #-}
 {-# language BlockArguments #-}
 {-# language PartialTypeSignatures #-}
 {-# language PatternSynonyms #-}
@@ -38,16 +39,19 @@ part p (map', cs) = res finish
     (_, maxP) = bounds map'
     maxP' = (+1) <$> maxP
     finish = foldl' exec (P 0 colstart, ri) cs
-    res (P r c, dir) = 1000 * (r+1) + 4 * (c+1) + weight dir
-    weight = \case
-      ri -> 0
-      dw -> 1
-      le -> 2
-      up -> 3
 
-    exec st@(pos, dir) = traceShow st $ \case
-      Steps n -> (steps n st, dir)
-      Turn t -> (pos, turn dir t)
+    res (P r c, dir) = 1000 * (r+1) + 4 * (c+1) + weight dir
+
+    weight dir = if
+      | dir == ri -> 0
+      | dir == dw -> 1
+      | dir == le -> 2
+      | dir == up -> 3
+
+    exec st@(pos, dir) = -- traceShow st $
+      \case
+        Steps n -> (steps n st, dir)
+        Turn t -> (pos, turn dir t)
 
     steps n (pos, dir) = go n pos where
       go 0 pos = pos
