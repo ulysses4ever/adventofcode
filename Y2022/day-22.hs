@@ -1,6 +1,6 @@
 #!/usr/bin/env cabal
 {- cabal:
-build-depends: base, flow, extra, linear, array
+build-depends: base, flow, extra, linear, array, pretty-simple
 -}
 {-# language LambdaCase #-}
 {-# language MultiWayIf #-}
@@ -10,11 +10,14 @@ build-depends: base, flow, extra, linear, array
 
 import Flow ((.>), (|>))
 import Data.List
+import Data.List.Extra (chunksOf)
 import Data.Maybe
 import Data.Char
 import Data.Function
 import Data.Array
+
 import Debug.Trace
+import Text.Pretty.Simple
 
 import Linear.Vector
 import Linear.V2
@@ -92,6 +95,33 @@ parse inp = (map', commands')
     map' = listArray
       (P 0 0, P (length mapRows - 1) (cls - 1))
       (concat mapRows')
+
+tileSize :: Int
+tileSize = 4
+
+-- | Given lines of text group chars into (rectangular) "tiles"
+-- input Ints are sizes.
+-- The tiles preserve the matrix structure, hence the [[[ output type.
+-- E.g.
+-- >>> intoTiles 1 1 "ab\ncd"
+-- [[["a"],["b"]],[["c"],["d"]]]
+--
+intoTiles :: Int -> Int -> String -> [[[String]]]
+intoTiles n m input = map transpose transTiles
+  where
+    tileRows = chunksOf n $ lines input
+    transTiles = map (map $ chunksOf m) tileRows
+
+intoSqTiles :: Int -> String -> [[[String]]]
+intoSqTiles n = intoTiles n n
+
+parseTiles :: String -> [A]
+parseTiles inp = tilesA
+  where
+    tiles = concat $ intoSqTiles tileSize inp
+    tilesNonempty = filter (head .> head .> (/= ' ')) tiles
+    tilesOneLine = map concat tilesNonempty
+    tilesA = map (listArray (P 0 0, P (tileSize-1) (tileSize-1))) tilesOneLine
 
 {--------------------------------------------------------
 --
