@@ -1,0 +1,18 @@
+cabal-version:   3.8
+name:            aoc-lib
+version:         0.1.0.0
+license:         NONE
+author:          a.pelenitsyn@gmail.com
+maintainer:      Artem Pelenitsyn
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
+common base
+    build-depends:    base 
+    ghc-options: -Wall
+    default-language: Haskell2010
+
+library
+    import:           base
+    exposed-modules:  AoC
+    hs-source-dirs:   src
