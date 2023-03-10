@@ -8,7 +8,7 @@ build-type:      Simple
 extra-doc-files: CHANGELOG.md
 
 common base
-    ghc-options: -Wall
+    -- ghc-options: -Wall
     build-depends:    base
     default-language: Haskell2010
 
@@ -18,5 +18,6 @@ library
                     , bytestring
                     , extra
                     , flow
+                    , linear
     exposed-modules:  AoC
     hs-source-dirs:   src
