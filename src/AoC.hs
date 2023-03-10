@@ -44,9 +44,6 @@ instance (Input a, Input b) => Input (a, b) where
 instance (Input a, Input b, Input c) => Input (a, b, c) where
   input = groups .> \case [a, b, c] -> (input a, input b, input c)
 
-instance Input a => Input [a] where
-  input = lines .> map input
-
 instance Input Value where
   input = BSC.pack .> BSC.fromStrict .> decode .> fromJust
 
@@ -59,8 +56,11 @@ instance Input P where -- "x,y"
 instance Input P3 where -- "x,y"
   input = split (== ',') .> \case [x,y,z] -> V3 (read x) (read y) (read z)
 
-instance Input [Int] where
+instance {-# OVERLAPPING  #-} Input [Int] where
   input
     =  groupBy ((==) `on` isDigit)
     .> filter (head .> isDigit)
     .> map read
+
+instance {-# OVERLAPPABLE #-} Input a => Input [a] where
+  input = lines .> map input
