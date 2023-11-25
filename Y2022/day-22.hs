@@ -123,6 +123,15 @@ parseTiles inp = tilesA
     tilesOneLine = map concat tilesNonempty
     tilesA = map (listArray (P 0 0, P (tileSize-1) (tileSize-1))) tilesOneLine
 
+-- neighborhood of a cube face (aka tile):
+-- - an index of another face and
+-- - a direction that you face when getting there
+type M = Map P (Int,P)
+type N = M
+type NTile = (A, N)
+
+-- neighboutTiles :: [A] -> [NTile]
+
 {--------------------------------------------------------
 --
 -- Below is somewhat standard stuff, which is moslty reused
