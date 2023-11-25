@@ -4,18 +4,25 @@
 {-# language LambdaCase           #-}
 {-# language FlexibleInstances    #-}
 
-module AoC where
+module AoC (
+  (.>), (|>),
+  P, P3,
+  Input(input),
+  trace, traceShow
+  )
+  where
 
 import Data.Char (isDigit)
 import Data.Function (on)
 import Data.Maybe (fromJust)
 import Data.List (groupBy)
+import Debug.Trace
 
 
 import Data.Aeson
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
-import Flow ((.>)) --, (|>))
+import Flow ((.>), (|>))
 import Data.List.Extra (split, splitOn)
 
 import Linear.V2
