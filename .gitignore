@@ -3,9 +3,7 @@ Main
 scratch
 *.html
 
-dist
 dist-*
-cabal-dev
 *.o
 *.hi
 *.hie
@@ -24,5 +22,4 @@ cabal.sandbox.config
 .stack-work/
 cabal.project.local
 cabal.project.local~
-.HTF/
 .ghc.environment.*
