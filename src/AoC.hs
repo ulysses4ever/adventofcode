@@ -6,6 +6,7 @@
 
 module AoC (
   (.>), (|>),
+  defaultMain,
   P, P3,
   Input(input),
   HomoGroups,
@@ -29,6 +30,9 @@ import Text.Pretty.Simple (pPrint)
 
 import Linear.V2
 import Linear.V3
+
+defaultMain :: (Input a, Show b) => (a -> b) -> IO ()
+defaultMain solve = interact (input .> solve .> show)
 
 type P = V2 Int
 pattern P a b = V2 a b
