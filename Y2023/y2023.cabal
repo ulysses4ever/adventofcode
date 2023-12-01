@@ -9,7 +9,7 @@ build-type:      Simple
 common base
     default-language: GHC2021
     default-extensions: LambdaCase
-    build-depends:    base, aoc-lib
+    build-depends:    base, aoc-lib, extra
 
 executable day-1
     import:           base
