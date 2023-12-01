@@ -2,11 +2,10 @@ module Main where
 
 import AoC
 
-solve :: [Int] -> (Int, Int)
-solve inp = (part 1, part 2)
-  where
-    part 1 = sum . map fuel $ inp
-    part 2 = sum . concatMap iterateFuel $ inp
+solve :: [Int] -> Int -> Int
+solve inp = \case
+    1 -> sum . map fuel $ inp
+    2 -> sum . concatMap iterateFuel $ inp
 
 fuel :: Int -> Int
 fuel mass = mass `div` 3 - 2
