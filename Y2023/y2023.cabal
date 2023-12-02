@@ -14,3 +14,6 @@ common base
 executable day-1
     import:           base
     main-is:          day-1.hs
+executable day-2
+    import:           base
+    main-is:          day-2.hs
