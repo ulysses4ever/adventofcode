@@ -16,4 +16,5 @@ executable day-1
     main-is:          day-1.hs
 executable day-2
     import:           base
+    build-depends:    megaparsec, parser-combinators
     main-is:          day-2.hs
