@@ -22,13 +22,27 @@ solve inp = \case
     1 -> part1
     2 -> part2
   where
+    gs :: [Game]
+    Just gs = parseMaybe (many parseGame) inp
     part1 = let
-      gs :: [Game]
-      Just gs = parseMaybe (many parseGame) inp
       vgs :: [Game]
       vgs = filter viable gs
       in map fst vgs |> sum
-    part2 = 0
+    part2 = map score gs |> sum
+
+-- Part 2
+
+score :: Game -> Int
+score (_, dds) = product mxs
+  where
+    ds :: Draws
+    ds = concat dds
+    mxs :: [Int]
+    mxs = map (fst .> (flt .> map snd .> maximum)) bounds
+    flt :: Color -> Draws
+    flt c = filter (fst .> (== c)) ds
+
+-- Part 1
 
 viable :: Game -> Bool
 viable (n, dss) = concat dss |> find violator .> isNothing
@@ -42,6 +56,8 @@ bounds =
   , ("green", 13)
   , ("blue",  14)
   ]
+
+-- Parsers
 
 parseGame :: Parser Game
 parseGame = do
