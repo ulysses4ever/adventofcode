@@ -22,5 +22,5 @@ executable day-2
 
 executable day-3
     import:           base
-    build-depends:    megaparsec, parser-combinators
+    build-depends:    containers, search-algorithms, transformers
     main-is:          day-3.hs
