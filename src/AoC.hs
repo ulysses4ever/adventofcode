@@ -7,12 +7,15 @@ module AoC (
   (.>), (|>),
   defaultMain,
   P, P3,
+  pattern P, pattern P3,
   Input(input),
   HomoGroups,
-  trace, traceShow, pPrint
+  trace, traceShow, traceId, traceShowId,
+  pPrint, pTraceShow
   )
   where
 
+import Debug.Pretty.Simple
 import Text.Pretty.Simple (pPrint)
 import Debug.Trace
 

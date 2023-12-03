@@ -11,7 +11,7 @@ common base
     -- ghc-options: -Wall
     build-depends:    base
     default-language: GHC2021
-    default-extensions: LambdaCase, TypeApplications
+    default-extensions: LambdaCase, TypeApplications, PatternSynonyms
 
 library
     import:           base
