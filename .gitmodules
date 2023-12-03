@@ -1,0 +1,4 @@
+[submodule "aoc-lib"]
+	path = aoc-lib
+	url = git@github.com:ulysses4ever/aoc-lib
+	branch = main

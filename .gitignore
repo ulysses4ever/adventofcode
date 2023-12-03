@@ -1,6 +1,5 @@
 session
 scratch
-aoc-lib
 *.html
 
 dist
