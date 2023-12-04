@@ -24,3 +24,8 @@ executable day-3
     import:           base
     build-depends:    containers, search-algorithms, transformers
     main-is:          day-3.hs
+
+executable day-4
+    import:           base
+    build-depends:    containers, search-algorithms, transformers
+    main-is:          day-4-scratchcards.hs
