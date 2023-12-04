@@ -2,7 +2,7 @@ module Main where
 
 import AoC
 
-import Data.List (intersect)
+import Data.List (intersect, foldl')
 
 solve :: [String] -> Int -> Int
 solve inp = \case
@@ -15,11 +15,17 @@ solve inp = \case
       let (ws, my) = span (/= '|') wsmy
       pure (tail $ input ws, input my)
 
-    score (ws, my) = let
-      exp = (length (ws `intersect` my) - 1)
-      in if exp < 0 then 0 else 2^exp
-    part1 = map score wsmy' |> sum -- (traceShowId $ map score (traceShowId wsmy'))
-    part2 = 0
+    wsc = map (\(ws,my) -> length (ws `intersect` my)) wsmy'
+
+    score wsc | wsc < 1 =  0
+              | otherwise = 2^(wsc-1)
+    part1 = map score wsc |> sum
+
+    copies = fst $ foldl' f ([], repeat 1) wsc
+      where
+        f (rs, c:cs) w = (c:rs,
+                          zipWith (+) cs (replicate w c ++ repeat 0))
+    part2 = copies |> sum
 
 main :: IO ()
 main = defaultMain solve
