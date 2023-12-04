@@ -15,9 +15,9 @@ type M = Map P Char
 type C = (M, Int, Int)
 
 solve :: [String] -> Int -> Int
-solve inp = -- traceShow rs $
+solve inp =
   \case
-    1 -> part1 -- traceShow nums (traceShow digs part1)
+    1 -> part1
     2 -> part2
   where
     c@(m, rmx, cmx) = parse inp
@@ -29,9 +29,16 @@ solve inp = -- traceShow rs $
     nums
       =  digs
       |> groupAdj
-      .> map (map ((`M.lookup` m) .> fromJust) .> read)
+      .> numify
+    numify = map (map ((`M.lookup` m) .> fromJust) .> read)
     part1 = sum nums
-    part2 = 0
+
+    rs' = filter ((`M.lookup` m) .> fromJust .> (== '*'))
+    digs' = map f' rs
+      where
+        f' r = (r, dfsRoot c r |> nubOrd .> sort .> groupAdj)
+    digs'' = filter (\(r,ns) -> length ns == 2) digs'
+    part2 = map (snd .> numify .> product) digs'' |> sum
 
 groupAdj (p:ps) = go [[p]] ps
   where
@@ -43,7 +50,7 @@ groupAdj (p:ps) = go [[p]] ps
          = go ([p]:reverse xs:xss) ps
 
 dfsRoot :: C -> P -> [P]
-dfsRoot c@(m,rmx,cmx) r = res -- traceShow (init r) res
+dfsRoot c@(m,rmx,cmx) r = res
   where
     res = nubOrd $ concatMap myDfs (init r)
     myDfs :: P -> [P]
@@ -64,11 +71,13 @@ dfsRoot c@(m,rmx,cmx) r = res -- traceShow (init r) res
 
 next (m,rmx,cmx) = eps
   `pruning` outofbound rmx cmx
-  `pruning` ((`M.lookup` m) .> \case
-                                            Nothing -> True
-                                            Just c  -> not $ isDigit c
-                                        )
-                .> (\ps -> censor (ps++) (pure ps))
+  `pruning`
+    ((`M.lookup` m)
+     .> \case
+          Nothing -> True
+          Just c  -> not $ isDigit c
+    )
+    .> (\ps -> censor (ps++) (pure ps))
   where
     eps (P r c) = [P r (c-1), P r (c+1)]
 outofbound rmx cmx (P r c)
@@ -94,14 +103,5 @@ parse inp = (M.fromList psAll, length inp, length $ head inp)
             | x == '.' = ps
             | otherwise = (P r c, x) : ps
 
-tiny =
-  [   ".3....."
-    , ".*12..."
-    , ".34...."]
-c=parse tiny
-
 main :: IO ()
-main =
-  -- print $ dfsRoot c (P 1 1)
-  -- runWriter $ dfsM (next c) (const False .> pure) (P 1 1) --
-  defaultMain solve
+main = defaultMain solve
