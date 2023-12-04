@@ -17,7 +17,7 @@ type C = (M, Int, Int)
 solve :: [String] -> Int -> Int
 solve inp = -- traceShow rs $
   \case
-    1 -> traceShow nums (traceShow digs part1)
+    1 -> part1 -- traceShow nums (traceShow digs part1)
     2 -> part2
   where
     c@(m, rmx, cmx) = parse inp
@@ -28,10 +28,19 @@ solve inp = -- traceShow rs $
     nums :: [Int]
     nums
       =  digs
-      |> groupBy (\(P r1 c1) (P r2 c2) -> r1 == r2 && abs (c2 - c1) == 1)
+      |> groupAdj
       .> map (map ((`M.lookup` m) .> fromJust) .> read)
     part1 = sum nums
     part2 = 0
+
+groupAdj (p:ps) = go [[p]] ps
+  where
+    go (xs:xss) [] = reverse xs : xss
+    go (xs@(q@(P rp cp) : qs):xss) (p@(P r c):ps)
+      | r == rp && cp + 1 == c
+         = go ((p:xs):xss) ps
+      | otherwise
+         = go ([p]:reverse xs:xss) ps
 
 dfsRoot :: C -> P -> [P]
 dfsRoot c@(m,rmx,cmx) r = res -- traceShow (init r) res
