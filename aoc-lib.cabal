@@ -21,7 +21,7 @@ library
                     , flow
                     , linear
                     , pretty-simple
-    exposed-modules:  AoC, Input
+    exposed-modules:  AoC, Input, Types
     hs-source-dirs:   src
 
 test-suite test-aoc-lib
