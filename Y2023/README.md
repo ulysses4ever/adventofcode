@@ -1,5 +1,23 @@
 ## Notes on AOC Y2023
 
+### Day 4: Scratchcards
+
+Relatively easy Monday problem. Splitting lines on a (single) `|` is something
+I with I could do with a library function.
+
+Part 2, where you need to count the number of copies of your scratchcards 
+was rather annoying to solve because it required a non-trivial fold:
+
+``` haskell
+copies = fst $ foldl' f ([], repeat 1) winCounts
+  where
+    f (res, c:cs) w = (c:res,
+                      zipWith (+) cs (replicate w c ++ repeat 0))
+```
+
+I wish a `zipWith` that leaves the tail of a longer tail intact was readily
+available (wouldn't need that `repeat 0` in that case).
+
 ### Day 3: Gear Ratios 
 
 First search problem this year. I had to revive the memory of how to do a
