@@ -22,7 +22,10 @@ class Input a where
 groups :: String -> [String]
 groups = splitOn "\n\n"
 
-newtype Groups a = HG [a]
+newtype Groups a = Gs [a]
+  deriving Show
+
+newtype Lines a = Ls [a]
   deriving Show
 
 instance (Input a, Input b) => Input (a, b) where
@@ -56,4 +59,7 @@ instance {-# OVERLAPPABLE #-} Input a => Input [a] where
   input = lines .> map input
 
 instance Input a => Input (Groups a) where
-  input = groups .> map input .> HG
+  input = groups .> map input .> Gs
+
+instance Input a => Input (Lines a) where
+  input = lines .> map input .> Ls
