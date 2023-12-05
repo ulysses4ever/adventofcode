@@ -10,7 +10,7 @@ testParseInput y d = do
 
 parseInput =
   \cases
-    2022 1 -> input @(HomoGroups [Int])
+    2022 1 -> input @(Groups [Int])
     _    _ -> error "unkwnown year/day pair"
 
 main = do

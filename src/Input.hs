@@ -22,7 +22,7 @@ class Input a where
 groups :: String -> [String]
 groups = splitOn "\n\n"
 
-newtype HomoGroups a = HG [a]
+newtype Groups a = HG [a]
   deriving Show
 
 instance (Input a, Input b) => Input (a, b) where
@@ -55,5 +55,5 @@ instance {-# OVERLAPPING  #-} Input String where
 instance {-# OVERLAPPABLE #-} Input a => Input [a] where
   input = lines .> map input
 
-instance Input a => Input (HomoGroups a) where
+instance Input a => Input (Groups a) where
   input = groups .> map input .> HG

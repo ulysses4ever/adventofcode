@@ -9,7 +9,7 @@ module AoC (
   P, P3,
   pattern P, pattern P3,
   Input(input),
-  HomoGroups,
+  Groups,
   trace, traceShow, traceId, traceShowId,
   pPrint, pTraceShow
   )
