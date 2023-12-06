@@ -1,5 +1,11 @@
 ## Notes on AOC Y2023
 
+### Day 5: Seeding the garden
+
+Interval arithmetics strikes again. I didn't have time to implement it and went
+for brute force (enumerating interval elements), which is pretty said. It took
+13 minutes on the server!
+
 ### Day 4: Scratchcards
 
 Relatively easy Monday problem. Splitting lines on a (single) `|` is something

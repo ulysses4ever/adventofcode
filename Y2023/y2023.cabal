@@ -10,6 +10,7 @@ common base
     default-language: GHC2021
     default-extensions: LambdaCase
     build-depends:    base, aoc-lib, extra
+    ghc-options: -threaded
 
 executable day-1
     import:           base

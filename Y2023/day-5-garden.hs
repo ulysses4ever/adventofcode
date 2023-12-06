@@ -1,7 +1,7 @@
 module Main where
 
 import AoC
-import Data.List.Extra (sortOn, scanl')
+import Data.List.Extra (sortOn, scanl', chunksOf)
 
 type Map = [P3]
 
@@ -12,22 +12,26 @@ solve inp@(Gs (Ls [seeds]:gs)) = \case
   where
 
     maps :: [Map]
-    maps = map (coerce .> tail .> sortOn (tail .> head) .> (\[a,b,c]->P3 a b c)) gs
+    maps = map (coerce .> tail .> sortOn (tail .> head)
+                .> (map (\[a,b,c]->P3 a b c))) gs
 
     planted = map (seedAll maps) seeds
 
-    part1 = planted |> minimum
-    part2 = 0
+    part1 = 0 -- planted |> minimum
+    part2
+      =  chunksOf 2 seeds
+      |> concatMap (\[s,l] -> take l [s..])
+      .> map ((\x -> if x `mod` 10000000 == 0
+                then trace ("Starting seed " ++ show x) x else x)
+              .> seedAll maps)
+      .> minimum
 
 
 seedAll :: [Map] -> Int -> Int
-seedAll ms sd = last $ seedTrace ms sd
-
-seedTrace :: [Map] -> Int -> [Int]
-seedTrace ms sd = scanl' seed sd ms
+seedAll ms sd = foldl' seed sd ms
 
 seed :: Int -> Map -> Int
-seed sd mp@([_,s1,_]:_)
+seed sd mp@(P3 _ s1 _:_)
   | sd < s1 = sd
   | otherwise =
     case dropWhile (\(P3 _ s r) -> s+r<=sd) mp of
