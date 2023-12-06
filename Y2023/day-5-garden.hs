@@ -3,7 +3,7 @@ module Main where
 import AoC
 import Data.List.Extra (sortOn, scanl')
 
-type Map = [[Int]]
+type Map = [P3]
 
 solve :: Groups (Lines [Int]) -> Int -> Int
 solve inp@(Gs (Ls [seeds]:gs)) = \case
@@ -12,7 +12,7 @@ solve inp@(Gs (Ls [seeds]:gs)) = \case
   where
 
     maps :: [Map]
-    maps = map (coerce .> tail .> sortOn (tail .> head)) gs
+    maps = map (coerce .> tail .> sortOn (tail .> head) .> (\[a,b,c]->P3 a b c)) gs
 
     planted = map (seedAll maps) seeds
 
@@ -30,9 +30,9 @@ seed :: Int -> Map -> Int
 seed sd mp@([_,s1,_]:_)
   | sd < s1 = sd
   | otherwise =
-    case dropWhile (\[_,s,r] -> s+r<=sd) mp of
+    case dropWhile (\(P3 _ s r) -> s+r<=sd) mp of
         [] -> sd
-        ([d, s, _]:_) -> sd - s + d
+        ((P3 d s _):_) -> sd - s + d
 
 -- smallInp :: [[[Int]]]
 -- smallInp =
