@@ -34,3 +34,7 @@ executable day-4
 executable day-5
     import:           base
     main-is:          day-5-garden.hs
+
+executable day-6
+    import:           base
+    main-is:          day-6-boat-races.hs
