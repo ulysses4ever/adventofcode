@@ -38,3 +38,7 @@ executable day-5
 executable day-6
     import:           base
     main-is:          day-6-boat-races.hs
+
+executable day-7
+    import:           base
+    main-is:          day-7-cards.hs
