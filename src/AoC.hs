@@ -11,7 +11,7 @@ module AoC (
   Input(input),
   Groups(..), Lines(..),
   trace, traceShow, traceId, traceShowId,
-  pPrint, pTraceShow, pTraceShowCompact,
+  pPrint, pTraceShow, pTraceShowCompact, pTraceShowIdCompact,
   coerce, foldl'
   )
   where
@@ -26,6 +26,9 @@ import Flow ((.>), (|>))
 import Types
 import Input
 import Data.List (foldl')
+
+pTraceShowIdCompact :: (Show a) => a -> a
+pTraceShowIdCompact x = pTraceShowCompact x x
 
 pTraceShowCompact :: (Show a) => a -> b -> b
 pTraceShowCompact
