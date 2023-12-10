@@ -42,3 +42,7 @@ executable day-6
 executable day-7
     import:           base
     main-is:          day-7-cards.hs
+
+executable day-9
+    import:           base
+    main-is:          day-9-histories.hs
