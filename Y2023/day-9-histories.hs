@@ -1,27 +1,21 @@
 module Main where
 
 import AoC
+import Data.List (find)
 
-solve :: [[Int]] -> Int -> Int
+solve :: [String] -> Int -> Int
 solve inp = \case
-    1 -> part1 -- pTraceShowCompact inp part1
-    2 -> part2
+    1 ->
+      inp' |> map ext .> sum
+    2 ->
+      inp' |> map (reverse .> ext) .> sum
   where
-    part1 = inp |> map (histories .> pTraceShowIdCompact .> map last .> sum) .> sum
-    part2 = 0
+    inp' = map (words .> map read) inp
 
-histories :: [Int] -> [[Int]]
-histories xs
-  =  iterate diff xs
-  |> takeWhile (any (/= 0))
-
-diff xs = foldr f [] (zip xs $ tail xs)
-    where
-    f (x, x') rs = let y=x'-x in (y:rs)
+ext :: [Int] -> Int
+ext xs
+  | all (==0) xs = 0
+  | otherwise = last xs + ext (zipWith (-) (tail xs) xs)
 
 main :: IO ()
 main = defaultMain solve
-
-inp' :: [[Int]]
-inp' =
-  [ [ 0, 3, 6, 9, 12, 15 ], [ 1, 3, 6, 10, 15, 21 ], [ 10, 13, 16, 21, 30, 45 ] ]
