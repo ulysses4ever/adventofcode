@@ -4,18 +4,20 @@ import AoC
 
 solve :: [[Int]] -> Int -> Int
 solve inp = \case
-    1 -> pTraceShowCompact inp part1
+    1 -> part1 -- pTraceShowCompact inp part1
     2 -> part2
   where
-    part1 = 0 -- map extrapolate inp
+    part1 = inp |> map (histories .> pTraceShowIdCompact .> map last .> sum) .> sum
     part2 = 0
 
-extrapolate :: [Int] -> b
-extrapolate = undefined
+histories :: [Int] -> [[Int]]
+histories xs
+  =  iterate diff xs
+  |> takeWhile (any (/= 0))
 
-diff xs = foldr f (False,[]) (zip xs $ tail xs)
+diff xs = foldr f [] (zip xs $ tail xs)
     where
-    f (x, x') (nonZero, rs) = let y=x'-x in (nonZero || y/=0, y:rs)
+    f (x, x') rs = let y=x'-x in (y:rs)
 
 main :: IO ()
 main = defaultMain solve
