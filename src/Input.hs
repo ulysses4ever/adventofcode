@@ -28,6 +28,9 @@ newtype Groups a = Gs [a]
 newtype Lines a = Ls [a]
   deriving Show
 
+newtype Words a = Ws [a]
+  deriving Show
+
 instance (Input a, Input b) => Input (a, b) where
   input = groups .> \case [a, b] -> (input a, input b)
 
@@ -63,3 +66,7 @@ instance Input a => Input (Groups a) where
 
 instance Input a => Input (Lines a) where
   input = lines .> map input .> Ls
+
+instance Input a => Input (Words a) where
+  input = words .> map input .> Ws
+
