@@ -1,0 +1,32 @@
+cabal-version:   3.8
+name:            aoc-lib
+version:         0.1.0.0
+license:         NONE
+author:          a.pelenitsyn@gmail.com
+maintainer:      Artem Pelenitsyn
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
+common base
+    -- ghc-options: -Wall
+    build-depends:    base
+    default-language: GHC2021
+    default-extensions: LambdaCase, TypeApplications, PatternSynonyms
+
+library
+    import:           base
+    build-depends:    aeson
+                    , bytestring
+                    , extra
+                    , flow
+                    , linear
+                    , pretty-simple
+    exposed-modules:  AoC, Input, Types
+    hs-source-dirs:   src
+
+test-suite test-aoc-lib
+    import:           base
+    build-depends:    aoc-lib
+    type:             exitcode-stdio-1.0
+    main-is:          Main.hs
+    hs-source-dirs:   test
