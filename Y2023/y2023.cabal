@@ -45,6 +45,7 @@ executable day-7
 
 executable day-8
     import:           base
+    build-depends:    containers
     main-is:          day-8-maps.hs
 
 executable day-9
