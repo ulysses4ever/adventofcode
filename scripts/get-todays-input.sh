@@ -7,8 +7,8 @@
 #              Default: ../session
 # - YEAR -- year of the challenge. Default: current year.
 # - DAY -- day of the challenge. Default: current day.
-# - OUT -- where to route the output. Default: Y$YEAR/input/day-$DAY.txt.
-#          May be useful to set it to '/deb/stdout'.
+# - OUT -- where to route the output. Default: $YEAR/input/day-$DAY.txt.
+#          May be useful to set it to '/dev/stdout'.
 # - SAMPLE -- try to extract sample input from the text of the problem. Default: unset,
 #             which means False. If set, means True and overrides the main mode.
 #             Doesn't need a session file. Print result to stdout.

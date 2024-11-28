@@ -8,7 +8,7 @@ build-type:      Simple
 
 common base
     default-language: GHC2021
-    default-extensions: LambdaCase
+    default-extensions: LambdaCase, BlockArguments
     build-depends:    base, aoc-lib, extra
     ghc-options: -threaded
 
@@ -42,6 +42,10 @@ executable day-6
 executable day-7
     import:           base
     main-is:          day-7-cards.hs
+
+executable day-8
+    import:           base
+    main-is:          day-8-maps.hs
 
 executable day-9
     import:           base

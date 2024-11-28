@@ -9,7 +9,7 @@ module AoC (
   P, P3,
   pattern P, pattern P3,
   Input(input),
-  Groups(..), Lines(..),
+  Groups(..), Lines(..), Words(..),
   trace, traceShow, traceId, traceShowId,
   pPrint, pTraceShow, pTraceShowCompact, pTraceShowIdCompact,
   coerce, foldl'
