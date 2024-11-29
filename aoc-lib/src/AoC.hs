@@ -12,7 +12,8 @@ module AoC (
   Groups(..), Lines(..), Words(..),
   trace, traceShow, traceId, traceShowId,
   pPrint, pTraceShow, pTraceShowCompact, pTraceShowIdCompact,
-  coerce, foldl'
+  coerce, foldl',
+  iterateWhile
   )
   where
 
@@ -38,3 +39,12 @@ pTraceShowCompact
 
 defaultMain :: (Input a, Show b) => (a -> Int -> b) -> IO ()
 defaultMain solve = interact (input .> (\i -> solve i <$> [1,2]) .> show)
+
+iterateWhile ::
+  (state -> Bool) ->
+  (state -> state) ->
+  state ->
+  state
+iterateWhile isFinal next current
+  | isFinal current = current
+  | otherwise = iterateWhile isFinal next (next current)

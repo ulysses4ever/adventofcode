@@ -16,7 +16,7 @@ cases and "trace" what verticies we saw. See tracing DFS in Day 3.
 This was very dumb problem which took me several hours just because my parser is
 broken: it doesn't parser signed numbers properly but doesn't fail either.
 
-### Day 8: [NOT SOLVED]
+### Day 8: [NOT SOLVED in 2023, solved in 2024]
 
 Some graph traversal (but people say that you can also use number theory and
 CRT, I think). I skipped for time reasons but brute force looked simple (parsing
@@ -29,6 +29,24 @@ AAA = (BBB, CCC)
 BBB = (DDD, EEE)
 ...
 ```
+
+**2024 update** I solved it with a hint from Reddit for Part 2.
+
+For Part 1 I tried a fancy idea (search source from sink instead of the other way
+round) but it turned out to not work (I guess, it's ambiguous). Then simple
+interpreter worked for Part 1. And for Part 2 you had to search from several
+sources and wait while you hit the sink simultaneously. The hint I needed:
+instead of actually searching "in parallel", search sequentially and then apply
+LCM to the results.
+
+Parsing with my library `aoc-lib` (the `Input` type class) is a breeze
+(almost... still some noise due to `coerce`).
+
+Added `iterateWhile` to `aoc-lib` to factor out simple iteration algorithm with
+a state that waits for a predicate to shoot. It's annoying toi encode the state
+with tuples, though. But perhaps some of the immutable "context" parameters can
+be just captures instead of actual parameters.
+
 
 ### Day 7: Poker
 
