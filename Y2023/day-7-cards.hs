@@ -81,4 +81,3 @@ cmpHands (h1, s1) (h2, s2)
 
 main :: IO ()
 main = defaultMain solve
--}
