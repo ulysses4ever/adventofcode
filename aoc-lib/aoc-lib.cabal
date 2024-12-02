@@ -17,6 +17,7 @@ library
     import:           base
     build-depends:    aeson
                     , bytestring
+                    , containers
                     , extra
                     , flow
                     , linear
