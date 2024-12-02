@@ -16,3 +16,7 @@ executable day-1
     import:           base
     build-depends:    containers
     main-is:          day-1-pairs.hs
+
+executable day-2
+    import:           base
+    main-is:          day-2.hs
