@@ -20,3 +20,8 @@ executable day-1
 executable day-2
     import:           base
     main-is:          day-2.hs
+
+executable day-3
+    import:           base
+    build-depends:    regex-tdfa
+    main-is:          day-3.hs
