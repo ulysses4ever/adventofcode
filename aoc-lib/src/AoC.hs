@@ -4,15 +4,26 @@
 {-# language FlexibleInstances    #-}
 
 module AoC (
+
+  -- May the flow be with you
   (.>), (|>),
   defaultMain,
+
+  -- Points
   P, P3,
   pattern P, pattern P3,
+
+  -- Input
   Input(input),
   Groups(..), Lines(..), Words(..),
+
+  -- Debugging
   trace, traceShow, traceId, traceShowId,
   pPrint, pTraceShow, pTraceShowCompact, pTraceShowIdCompact,
-  coerce, foldl',
+  coerce,
+
+  -- Algorithms
+  foldl',
   iterateWhile,
   counter, genericCounter,
   module Maps

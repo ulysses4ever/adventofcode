@@ -8,7 +8,7 @@ build-type:      Simple
 
 common base
     default-language: GHC2021
-    default-extensions: LambdaCase, BlockArguments
+    default-extensions: LambdaCase, BlockArguments, LexicalNegation
     build-depends:    base, aoc-lib, extra
     ghc-options: -threaded
 
