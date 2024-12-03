@@ -1,6 +1,7 @@
 session
 scratch
 *.html
+**/input
 
 dist
 dist-*
