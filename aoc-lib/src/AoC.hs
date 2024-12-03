@@ -26,6 +26,8 @@ module AoC (
   foldl',
   iterateWhile,
   counter, genericCounter,
+  groupOn, catMaybes,
+
   module Maps
   )
   where
@@ -36,6 +38,8 @@ import Debug.Trace
 import Data.Coerce (coerce)
 import qualified Data.Map.Strict as Map
 import qualified Data.IntMap.Strict as IntMap
+import Data.List.Extra (groupOn)
+import Data.Maybe (catMaybes)
 
 import Flow ((.>), (|>))
 
