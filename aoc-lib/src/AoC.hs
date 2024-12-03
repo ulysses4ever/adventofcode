@@ -14,7 +14,8 @@ module AoC (
   pPrint, pTraceShow, pTraceShowCompact, pTraceShowIdCompact,
   coerce, foldl',
   iterateWhile,
-  counter, genericCounter
+  counter, genericCounter,
+  module Maps
   )
   where
 
@@ -27,6 +28,7 @@ import qualified Data.IntMap.Strict as IntMap
 
 import Flow ((.>), (|>))
 
+import Maps
 import Types
 import Input
 import Data.List (foldl')

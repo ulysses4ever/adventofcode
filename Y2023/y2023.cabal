@@ -51,3 +51,8 @@ executable day-8
 executable day-9
     import:           base
     main-is:          day-9-histories.hs
+
+executable day-10
+    import:           base
+    build-depends:    containers
+    main-is:          day-10-pipes.hs

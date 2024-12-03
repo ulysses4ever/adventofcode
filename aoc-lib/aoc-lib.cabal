@@ -11,7 +11,7 @@ common base
     -- ghc-options: -Wall
     build-depends:    base
     default-language: GHC2021
-    default-extensions: LambdaCase, TypeApplications, PatternSynonyms
+    default-extensions: LambdaCase, TypeApplications, PatternSynonyms, BlockArguments, LexicalNegation
 
 library
     import:           base
@@ -22,7 +22,7 @@ library
                     , flow
                     , linear
                     , pretty-simple
-    exposed-modules:  AoC, Input, Types
+    exposed-modules:  AoC, Input, Maps, Types
     hs-source-dirs:   src
 
 test-suite test-aoc-lib

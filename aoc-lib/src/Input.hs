@@ -15,6 +15,7 @@ import Data.List.Extra (split, splitOn)
 import Text.Pretty.Simple (pPrint)
 
 import Types
+import Maps
 
 class Input a where
   input :: String -> a
@@ -70,3 +71,6 @@ instance Input a => Input (Lines a) where
 instance Input a => Input (Words a) where
   input = words .> map input .> Ws
 
+
+instance Input Map2D where
+  input = readMap2DNoDots
