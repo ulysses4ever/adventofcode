@@ -26,7 +26,8 @@ module AoC (
   foldl',
   iterateWhile,
   counter, genericCounter,
-  groupOn, catMaybes,
+  groupOn, catMaybes, remove,
+  countIf, count,
 
   module Maps
   )
@@ -74,3 +75,14 @@ counter = flip zip [1,1..] .> IntMap.fromListWith (+)
 
 genericCounter :: Ord a => [a] -> Map.Map a Int
 genericCounter = flip zip [1,1..] .> Map.fromListWith (+)
+
+remove :: Int -> [a] -> [a]
+remove _ [] = []
+remove 0 (x:xs) = xs
+remove n (x:xs) = x : remove (n-1) xs
+
+countIf :: (a -> Bool) -> [a] -> Int
+countIf p = filter p .> length
+
+count:: Eq a => a -> [a] -> Int
+count a = filter (== a) .> length

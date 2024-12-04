@@ -5,16 +5,14 @@ import Data.Maybe
 
 solve :: [[Int]] -> Int -> Int
 solve inp = \case
-    1 -> res issafe
-    2 -> res issafe'
+    1 -> countIf issafe inp
+    2 -> countIf issafe' inp
+
+diffokAll r = zipWith diffok r (tail r)
   where
-    res safe = pTraceShowCompact (map safe inp)
-      (filter safe inp |> length)
+  diffok x y = abs (x - y) <= 3
 
-diffok' r = zipWith diffok r (tail r)
-diffok x y = abs (x - y) <= 3
-
-issafe r = and (diffok' r)
+issafe r = and (diffokAll r)
     && ismono r
 
 ismono r =
@@ -25,26 +23,24 @@ ismono r =
 
 -- Part 2
 
-mono2 inc r = zipWith (monopred inc) r (tail r)
-    |> flip zip [1..]
+-- Nothing if increasing, otherwise the index of the first element that breaks it minus one
+mono2 r = zipWith (<) r (tail r)
+    |> flip zip [0..]
     |> lookup False
-  where
-    monopred inc x y = inc * (x - y) > 0
 
-issafe' r = trace ("Is r=" ++ show r ++ " almost safe?")
-  almostsafe 1 r || almostsafe -1 r
+issafe' r =
+  almostsafe r || almostsafe (reverse r)
 
-almostsafe inc r =
-    case mono2 inc r of
-        Nothing -> trace "  - It's already mono. Is diffok?"
-          (pTraceShowIdCompact $ and $ diffok' r)
-        Just n -> trace ("  - Not mono "
-                         ++ (if inc == 1 then "one" else "another")
-                         ++ " way, try to drop "
-                         ++ show n ++ " and check safety: " )
-          pTraceShowIdCompact (issafe (drop n r))
+almostsafe r =
+    case mono2 r of
+        Nothing ->
+          let dok = diffokAll r in
+            and (tail dok) || and (init dok)
+        Just n ->
+          issafe (remove n r) || issafe (remove (n+1) r)
 
---t = pTraceShowCompact
+-- brute force -- works like a charm!
+issafe'' r = issafe r || or [ issafe (remove n r) | n <- [0..(length r - 1)]]
 
 main :: IO ()
 main = defaultMain solve
