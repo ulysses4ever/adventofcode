@@ -19,7 +19,7 @@ maybeGood ops (target:xs)
 
 combinations ops (x:xs) = foldl' f [x] xs
   where
-    f ys x = foldl' (\acc op -> acc ++ map (`op` x) ys) [] ops
+    f ys x = concat $ foldl' (\acc op -> map (`op` x) ys : acc) [] ops
 
 
 main :: IO ()
