@@ -29,3 +29,7 @@ executable day-3
 executable day-4
     import:           base
     main-is:          day-4.hs
+
+executable day-7
+    import:           base
+    main-is:          day-7.hs
