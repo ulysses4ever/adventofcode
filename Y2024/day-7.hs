@@ -14,13 +14,12 @@ ops2 = conc : ops1
 conc x y = show x ++ show y |> read
 
 maybeGood ops (target:xs)
-  | target `elem` combinations ops xs = Just target
+  | target `elem` combinations target ops xs = Just target
   | otherwise = Nothing
 
-combinations ops (x:xs) = foldl' f [x] xs
+combinations target ops (x:xs) = foldl' f [x] xs
   where
-    f ys x = concat $ foldl' (\acc op -> map (`op` x) ys : acc) [] ops
-
+    f ys x = concat $ foldl' (\acc op -> filter (<= target) (map (`op` x) ys) : acc) [] ops
 
 main :: IO ()
 main = defaultMain solve
