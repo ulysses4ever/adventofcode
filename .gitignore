@@ -1,7 +1,8 @@
 session
 scratch
 *.html
-**/input
+**/input/*
+!**/input/*small.txt
 
 dist
 dist-*
