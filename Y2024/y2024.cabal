@@ -36,4 +36,5 @@ executable day-7
 
 executable day-11
     import:           base
+    build-depends:    containers
     main-is:          day-11.hs
