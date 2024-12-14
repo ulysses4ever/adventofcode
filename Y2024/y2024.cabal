@@ -38,3 +38,8 @@ executable day-11
     import:           base
     build-depends:    containers
     main-is:          day-11.hs
+
+executable day-13
+    import:           base
+    build-depends:    arithmoi ^>=0.11.0.1
+    main-is:          day-13.hs

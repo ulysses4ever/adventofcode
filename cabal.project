@@ -1,1 +1,6 @@
 packages: aoc-lib, Y2019, Y2023, Y2024
+
+allow-newer:
+
+    -- y2024/d13 need extGcd, we use an older `arithmoi` package for that but see https://github.com/chessai/semirings/issues/91
+  integer-gmp, transformers
