@@ -1,0 +1,18 @@
+cabal-version:   3.0
+name:            y2025
+version:         0.1.0.0
+license:         NONE
+author:          a@pelenitsyn.top
+maintainer:      Artem Pelenitsyn
+build-type:      Simple
+
+common base
+    default-language: GHC2021
+    default-extensions: LambdaCase, BlockArguments, LexicalNegation
+    build-depends:    base, aoc-lib, extra
+    ghc-options: -threaded
+
+executable day-1
+    import:           base
+    -- build-depends:    containers
+    main-is:          day-1-dial.hs

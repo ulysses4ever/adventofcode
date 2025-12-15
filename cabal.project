@@ -1,4 +1,4 @@
-packages: aoc-lib, Y2019, Y2023, Y2024
+packages: aoc-lib, Y2019, Y2023, Y2024, Y2025
 
 allow-newer:
 
